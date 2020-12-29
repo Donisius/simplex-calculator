@@ -8,7 +8,7 @@ const parse = () => {
 	let rowCoefficients = [];
 	let rowVariableNames = [];
 	textContent.split(/\n/).forEach((line, rowIndex) => {
-		if (!line.replace(/\s/g, '').length) {
+		if (!line.replace(/\s/g, "").length) {
 			return;
 		}
 		let signum = "positive";
@@ -40,7 +40,15 @@ const parse = () => {
 			}
 
 			// Variable name and coefficient value is finished being built.
-			else if (variableName.length !== 0) {
+			if (variableName.length !== 0
+				&& (
+					line[i] === "+"
+					|| line[i] === " "
+					|| line[i] === "-"
+					|| line[i] === "<"
+					|| line[i] === "="
+					|| line[i] === ">"
+				)) {
 				if (coefficient.length === 0) {
 					coefficient = "1";
 				}
@@ -112,7 +120,7 @@ const parse = () => {
 }
 
 const simplex = () => {
-	clearTableaus();
+	clearResults();
 	const initialTableau = parse();
 	let { distinctVariableNames } = initialTableau;
 	let initialVariableNames = [...distinctVariableNames];
@@ -144,7 +152,8 @@ const simplex = () => {
 	const phaseOneResult = calculateCoefficients(modifiedTableau, initialVariableNames, distinctVariableNames);
 	const phaseOneResultNode = document.createElement("h4");
 	phaseOneResultNode.appendChild(document.createTextNode(`
-		LO is feasible. The initial vertex calculated is: ${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}
+		LO is feasible. The initial vertex calculated is:
+		${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}
 	`));
 	phaseOneResultNode.style.textAlign = "center"
 	anchor.appendChild(phaseOneResultNode);
@@ -176,7 +185,7 @@ const simplex = () => {
 	modifiedTableau = danzig(modifiedTableau, distinctVariableNames, 0);
 	results = calculateCoefficients(modifiedTableau, initialVariableNames, distinctVariableNames);
 
-	const displayResults = document.getElementById("results")
+	const displayResults = document.getElementById("results");
 	displayResults.appendChild(document.createTextNode(`
 		The optimal value of ${modifiedTableau[0][distinctVariableNames.length - 1] * -1}
 		can be achieved with: ${results.map(result => `${result.variable} = ${result.value}`)}
@@ -185,7 +194,7 @@ const simplex = () => {
 }
 
 const getPivotPosition = (tableau) => {
-	const pivotColumnIndex = tableau[0].indexOf(Math.max(...tableau[0].slice(1, -1)));
+	const pivotColumnIndex = tableau[0].slice(1).indexOf(Math.max(...tableau[0].slice(1, -1))) + 1;
 	let minRatio = Number.MAX_VALUE;
 	let pivotRowIndex;
 	for (let i = 1; i < tableau.length; i++) {
@@ -306,7 +315,7 @@ const generatePhaseOneTableau = (tableau, distinctVariableNames, comparisons) =>
 const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: null, y: null }) => {
 	const anchor = document.getElementById("tableau-anchor");
 
-	const table = document.createElement('table');
+	const table = document.createElement("table");
 	table.className = "tableau"
 	const tableBody = document.createElement("tbody");
 	const headerRow = document.createElement("tr");
@@ -325,7 +334,7 @@ const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: 
 			tableDatapoint = document.createElement("td");
 			tableDatapoint.appendChild(document.createTextNode(datapoint));
 			if (rowIndex === pivotPosition.y && columnIndex === pivotPosition.x) {
-				tableDatapoint.style.backgroundColor = '#E8A87C';
+				tableDatapoint.style.backgroundColor = "#E8A87C";
 			}
 			tableRow.appendChild(tableDatapoint);
 		});
@@ -339,12 +348,7 @@ const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: 
 	anchor.appendChild(table);
 }
 
-const clearAll = () => {
-	document.getElementById("input").value = null;
-	clearTableaus();
-}
-
-const clearTableaus = () => {
+const clearResults = () => {
 	const results = document.getElementById("results");
 	while(results.firstChild) {
 		results.removeChild(results.lastChild);
