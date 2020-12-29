@@ -142,80 +142,14 @@ const parse = () => {
 	}
 }
 
-const simplex = () => {
-	clearResults();
-	const initialTableau = parse();
-	let { distinctVariableNames } = initialTableau;
-	let initialVariableNames = [...distinctVariableNames];
-	const { comparisons } = initialTableau;
-	let modifiedTableau = [...initialTableau.tableau];
-
-	phaseOne = generatePhaseOneInitialTableau(modifiedTableau, distinctVariableNames, comparisons);
-	modifiedTableau = phaseOne.tableau;
-	distinctVariableNames = phaseOne.distinctVariableNames;
-
-	// PHASE 1
-	const anchor = document.getElementById("tableau-anchor");
-
-	const phaseOneNode = document.createElement("h2");
-	phaseOneNode.appendChild(document.createTextNode("PHASE 1"));
-	anchor.appendChild(phaseOneNode);
-
-	generateTable(distinctVariableNames, modifiedTableau, "Initial Tableau");
-
-	// Get to first tableau.
-	modifiedTableau[0] = modifiedTableau[0].map((datapoint, columnIndex) => (
-		datapoint + modifiedTableau.slice(1).reduce((currentTotal, row) =>
-			currentTotal + row[columnIndex], 0
-		)
-	));
-	generateTable(distinctVariableNames, modifiedTableau, "Tableau 0", getPivotPosition(modifiedTableau));
-	modifiedTableau = danzig(modifiedTableau, distinctVariableNames, 1, getPivotPosition(modifiedTableau));
-
-	const phaseOneResult = calculateCoefficients(modifiedTableau, initialVariableNames, distinctVariableNames);
-	const phaseOneResultNode = document.createElement("h4");
-	phaseOneResultNode.appendChild(document.createTextNode(`
-		LO is feasible. The initial vertex calculated is:
-		${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}
-	`));
-	phaseOneResultNode.style.textAlign = "center"
-	anchor.appendChild(phaseOneResultNode);
-
-	// PHASE 2
-
-	// Remove imaginary coefficients.
-	modifiedTableau.forEach((row) => {
-		row.splice(initialTableau.tableau.length + modifiedTableau.length - 1, modifiedTableau.length - 1);
-	});
-	// Remove imaginary variables.
-	distinctVariableNames.splice(
-		initialTableau.tableau.length + modifiedTableau.length - 1,
-		modifiedTableau.length - 1
-	);
-	// Use initial coeffieicnets.
-	modifiedTableau[0].splice(1, initialTableau.tableau[0].length, ...initialTableau.tableau[0]);
-
-	const phaseTwoNode = document.createElement("h2");
-	phaseTwoNode.appendChild(document.createTextNode("PHASE 2"));
-	anchor.appendChild(phaseTwoNode);
-
-	generateTable(
-		distinctVariableNames,
-		modifiedTableau,
-		`Initial Tableau`,
-		getPivotPosition(modifiedTableau)
-	);
-	modifiedTableau = danzig(modifiedTableau, distinctVariableNames, 0);
-	results = calculateCoefficients(modifiedTableau, initialVariableNames, distinctVariableNames);
-
-	const displayResults = document.getElementById("results");
-	displayResults.appendChild(document.createTextNode(`
-		The optimal value of ${modifiedTableau[0][distinctVariableNames.length - 1] * -1}
-		can be achieved with: ${results.map(result => `${result.variable} = ${result.value}`)}
-	`));
-	displayResults.style.display = "block";
-}
-
+/**
+ * We use Danzig's here to calculate which element to use as the pivot. It goes as follows:
+ * 1. We pick the column where the objective function's coefficient is post positive (largest).
+ * 2. Once a column is decided, the row to pivot on is determined by the smallest nonnegative ratio
+ * of the RHS by the corresponding positive coefficient in the pivoting column.
+ *
+ * @param tableau 
+ */
 const getPivotPosition = (tableau) => {
 	const pivotColumnIndex = tableau[0].slice(1).indexOf(Math.max(...tableau[0].slice(1, -1))) + 1;
 	let minRatio = Number.MAX_VALUE;
@@ -230,6 +164,13 @@ const getPivotPosition = (tableau) => {
 	return { x: pivotColumnIndex, y: pivotRowIndex };
 }
 
+/**
+ * Find the value's of the variables of the cost function based on the given tableau.
+ *
+ * @param tableau 
+ * @param initialVariableNames 
+ * @param currentVariableNames 
+ */
 const calculateCoefficients = (tableau, initialVariableNames, currentVariableNames) => {
 	const values = [];
 	initialVariableNames.forEach(variableName => {
@@ -254,27 +195,46 @@ const calculateCoefficients = (tableau, initialVariableNames, currentVariableNam
 	return values;
 }
 
-const danzig = (modifiedTableau, distinctVariableNames, iterationStart) => {
-	tableau = [...modifiedTableau];
+/**
+ * For each iteration:
+ * 1. Check if there are any positive nonzero coefficients in the cost function, if there are,
+ * keep going, if not then an optimal solutuon has been achieved and we can stop.
+ * 2. Get the pivot position using Danzig's rule. Check out `getPivotPosition` for details.
+ *
+ * @param tableau
+ * @param distinctVariableNames 
+ * @param iterationStart This is for the generation of the tables captions.
+ */
+const doSimplex = (tableau, distinctVariableNames, iterationStart) => {
+	modifiedTableau = [...tableau];
 	let iteration = iterationStart;
-	while (!tableau[0].slice(1, -1).every((datapoint => datapoint <= 0))) {
-		pivotPosition = getPivotPosition(tableau);
+	// TODO: Add cycle detection.
+	while (!modifiedTableau[0].slice(1, -1).every((datapoint => datapoint <= 0))) {
+		pivotPosition = getPivotPosition(modifiedTableau);
 
-		tableau.forEach((row, rowIndex) => {
+		modifiedTableau.forEach((row, rowIndex) => {
 			if (rowIndex === pivotPosition.y) {
 				return;
 			} else {
 				const pivotCoefficient
-					= tableau[rowIndex][pivotPosition.x] / tableau[pivotPosition.y][pivotPosition.x];
-				tableau[rowIndex]= row.map((datapoint, columnIndex) =>
-					datapoint - tableau[pivotPosition.y][columnIndex] * pivotCoefficient
+					= modifiedTableau[rowIndex][pivotPosition.x] / modifiedTableau[pivotPosition.y][pivotPosition.x];
+				modifiedTableau[rowIndex]= row.map((datapoint, columnIndex) =>
+					datapoint - modifiedTableau[pivotPosition.y][columnIndex] * pivotCoefficient
 				);
 			}
 		});
-		generateTable(distinctVariableNames, tableau, `Tableau ${iteration}`, getPivotPosition(tableau));
+		// You might be asking, "Why in the world would you call `getPivotPosition` again here?",
+		// and well that's because in order to properly indicate which row to pivot on next on the
+		// html table, we need to preemptively calculate it's pivot position. I need to know what the
+		// table needs to contain before I generate it so leave me alone. Can this be better, definitely.
+		generateTable(distinctVariableNames,
+			modifiedTableau,
+			`Tableau ${iteration}`,
+			getPivotPosition(modifiedTableau)
+		);
 		iteration++;
 	}
-	return tableau;
+	return modifiedTableau;
 }
 
 /**
@@ -289,7 +249,7 @@ const danzig = (modifiedTableau, distinctVariableNames, iterationStart) => {
  * @param distinctVariableNames 
  * @param comparisons 
  */
-const generatePhaseOneInitialTableau = (tableau, distinctVariableNames, comparisons) => {
+const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 	const relaxedTableau = [...tableau];
 	const modifiedVariableNames = [...distinctVariableNames];
 
@@ -392,4 +352,73 @@ const clearResults = () => {
 		tableauAnchor.removeChild(tableauAnchor.lastChild);
 	}
 	results.style.display = "none";
+}
+
+const main = () => {
+	clearResults();
+	const tableauAnchor = document.getElementById("tableau-anchor");
+	const parsedResult = parse();
+	let { distinctVariableNames } = parsedResult;
+	let initialVariableNames = [...distinctVariableNames];
+	const { comparisons } = parsedResult;
+	let { tableau } = parsedResult;
+	const initialTableau= [...tableau];
+
+	// PHASE 1
+	const auxiliaryProblem = generatePhaseOne(tableau, distinctVariableNames, comparisons);
+	tableau = auxiliaryProblem.tableau;
+	distinctVariableNames = auxiliaryProblem.distinctVariableNames;
+
+	tableauAnchor.appendChild(document.createElement("h2").appendChild(document.createTextNode("PHASE 1")));
+
+	generateTable(distinctVariableNames, tableau, "Initial Tableau");
+	// Use gaussian elimination to get all auxiliary variables in the cost function to zero
+	// by adding all the other rows to the cost function.
+	tableau[0] = tableau[0].map((datapoint, columnIndex) => (
+		datapoint + tableau.slice(1).reduce((currentTotal, row) =>
+			currentTotal + row[columnIndex], 0
+		)
+	));
+	generateTable(distinctVariableNames, tableau, "Tableau 0", getPivotPosition(tableau));
+	tableau = doSimplex(tableau, distinctVariableNames, 1, getPivotPosition(tableau));
+
+	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
+	const phaseOneResultNode = document.createElement("h4");
+	phaseOneResultNode.appendChild(document.createTextNode(`
+		LO is feasible. The initial vertex calculated is:
+		${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}
+	`));
+	phaseOneResultNode.style.textAlign = "center"
+	tableauAnchor.appendChild(phaseOneResultNode);
+
+	// PHASE 2
+	// Remove imaginary coefficients.
+	tableau.forEach((row) => {
+		row.splice(initialTableau.length + tableau.length - 1, tableau.length - 1);
+	});
+	// Remove imaginary variables.
+	distinctVariableNames.splice(
+		initialTableau.length + tableau.length - 1,
+		tableau.length - 1
+	);
+	// Use initial cost function.
+	tableau[0].splice(1, initialTableau[0].length, ...initialTableau[0]);
+
+	tableauAnchor.appendChild(document.createElement("h2").appendChild(document.createTextNode("PHASE 2")));
+
+	generateTable(
+		distinctVariableNames,
+		tableau,
+		`Initial Tableau`,
+		getPivotPosition(tableau)
+	);
+	tableau = doSimplex(tableau, distinctVariableNames, 0);
+	results = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
+
+	const displayResults = document.getElementById("results");
+	displayResults.appendChild(document.createTextNode(`
+		The optimal value of ${tableau[0][distinctVariableNames.length - 1] * -1}
+		can be achieved with: ${results.map(result => `${result.variable} = ${result.value}`)}
+	`));
+	displayResults.style.display = "block";
 }
