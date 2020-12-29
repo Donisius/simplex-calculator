@@ -1,121 +1,144 @@
+// TODO: catch invalid inputs.
 const parse = () => {
 	const textContent = document.getElementById("input").value;
+	
+	// All coefficients of each equation (row).
 	const coefficients = [];
+	// All variable names of each equation (row). This is used to keep track of the order
+	// of the coefficients.
 	const variableNames = [];
+	// All of the comparisons of each equation (row). This must be `>=` or `<=` to find a
+	// true maximum of minumum optimal value.
 	const comparisons = [];
+	// This will maintain the order of each row's variables. Variables can be input like:
+	// max x1 + x2 + x3
+	// x4 + x3 + x1
+	// and some kind of ordering needs to be maintained to take this into account.
 	const distinctVariableNames = [];
+	let optimizationType = "max"; // Can be `max` or `min`.
 
+	// This is used to keep track of the coefficients of a particular row. After the row's coefficients
+	// have been added to `coefficients`, this will be reset and populated in the next iteration.
 	let rowCoefficients = [];
+	// This is used to keep track of the variable names of a particular row. After the row's variable names
+	// have been added to `variableNames`, this will be reset, and populated in the next iteration.
 	let rowVariableNames = [];
+
 	textContent.split(/\n/).forEach((line, rowIndex) => {
+		// If line is just whitespace, ignore it.
 		if (!line.replace(/\s/g, "").length) {
 			return;
 		}
+
+		// This is a pretty straightforward parsing algorithm. TODO: Make this more robust.
+		// Each character in the line will be iterated over and we try and predict whether a particular
+		// character is a part of the following:
+		// `signum`: can be `+` or `-`
+		// `coefficient`: numbers that go directly before a `variableName`
+		// `variableName`: can be anything that doesn't start with a `+`, `-`, `<`, ``>`, `=`, or a number
+		// `comparison`: can be `>=` or `<=`
+		// If we detect that one of these is finished building, then they will be pushed to their
+		// corresponding arrays.
 		let signum = "positive";
 		let coefficient = "";
 		let variableName = "";
 		let comparison = "";
-		let i = 0;
-		while (i < line.length) {
-			if (line[i] === "-") {
+
+		// Push row produced at the end to top of the arrays if it's the cost function.
+		let isCostFunction = line.toLowerCase().includes("min") || line.toLowerCase().includes("max");
+		if (isCostFunction) {
+			optimizationType = line.toLowerCase().includes("min") ? "min" : "max";
+			line = line.replace(/min|max/, "");
+		}
+
+		[...line].forEach((char, columnIndex) => {
+			if (char === "<" || char === "=" || char === ">") {
+				comparison = comparison.concat(char);
+			}
+
+			// Number char codes are between 48 and 57.
+			else if (char.charCodeAt(0) >= 48 && char.charCodeAt(0) <= 57
+				&& variableName.length === 0 // variableNames can have numbers too.
+				|| char.charCodeAt(0) === 190) { // Periods (for decimals).
+					coefficient = coefficient.concat(char);
+			}
+			
+			else if (char !== "+" && char !== " " && char !== "-") {
+				variableName = variableName.concat(char);
+			}
+			
+			else if (char === "-") {
 				signum = "negative";
 			}
 
-			// Build comparison.
-			else if (line[i] === "<" || line[i] === "=" || line[i] === ">") {
-				comparison = comparison.concat(line[i]);
-			}
+			// `variableName` and `coefficient` are done being built and can be pushed to their
+			// corresponding arrays.
+			if (((char === " "
+				|| char === "+"
+				|| char === "-"
+				|| char === "<"
+				|| char === "="
+				|| char === ">")
+				&& variableName.length !== 0) || columnIndex === line.length - 1) {
+					// Cases like `x1 + x2`.
+					if (coefficient.length === 0) {
+						coefficient = "1";
+					}
 
-			// Build coefficient.
-			else if ((line.charCodeAt(i) >= 48
-				&& line.charCodeAt(i) <= 57
-				&& variableName.length === 0
-				) || comparison.length === 2) {
-				coefficient = coefficient.concat(line[i])
-			}
+					if (signum === "negative") {
+						coefficient = "-" + coefficient;
+					}
 
-			// Must be part of a variable name.
-			else if (line[i] !== "+" && line[i] !== " ") {
-				variableName = variableName.concat(line[i]);
-			}
+					rowCoefficients.push(parseFloat(coefficient));
+					if (variableName.length) {
+						rowVariableNames.push(variableName);
+						if (!distinctVariableNames.includes(variableName)) {
+							distinctVariableNames.push(variableName);
+						}
+					}
 
-			// Variable name and coefficient value is finished being built.
-			if (variableName.length !== 0
-				&& (
-					line[i] === "+"
-					|| line[i] === " "
-					|| line[i] === "-"
-					|| line[i] === "<"
-					|| line[i] === "="
-					|| line[i] === ">"
-				)) {
-				if (coefficient.length === 0) {
-					coefficient = "1";
-				}
-				if (signum === "negative") {
-					rowCoefficients.push(-parseInt(coefficient))
-				} else {
-					rowCoefficients.push(parseInt(coefficient))
-				}
-
-				rowVariableNames.push(variableName);
-				if (!distinctVariableNames.includes(variableName)) {
-					distinctVariableNames.push(variableName);
-				}
-
-				// Reset tokens.
-				signum = "positive";
-				coefficient = "";
-				variableName = "";
-			}
-
-			i++
-		}
-		// Push remaining variable name and coefficient.
-		if (signum === "negative") {
-			rowCoefficients.push(-parseInt(coefficient))
-		} else {
-			rowCoefficients.push(parseInt(coefficient))
-		}
-
-		if (rowIndex > 0) {
-			comparisons.push(comparison);
-		} else {
-			rowVariableNames.push(variableName);
-			if (!distinctVariableNames.includes(variableName)) {
-				distinctVariableNames.push(variableName);
-			}
-		}
-
-		variableNames.push(rowVariableNames);
-		coefficients.push(rowCoefficients);
-		rowVariableNames = [];
-		rowCoefficients = [];
-	});
-
-	// Generate initial tableau.
-	const tableau = [];
-	variableNames.forEach((rowVariableNames, rowIndex) => {
-		let rowValues = [];
-		distinctVariableNames.forEach((distinctVariableName) => {
-			namePosition = rowVariableNames.indexOf(distinctVariableName);
-			if (namePosition === -1) {
-				rowValues.push(0);
-			} else {
-				rowValues.push(coefficients[rowIndex][namePosition]);
+					// Reset tokens.
+					signum = "positive";
+					coefficient = "";
+					variableName = "";
 			}
 		});
-		if (rowIndex > 0) {
-			rowValues.push(coefficients[rowIndex].slice(-1)[0]);
+
+		if (!isCostFunction) {
+			comparisons.push(comparison);
+			coefficients.push(rowCoefficients);
+			variableNames.push(rowVariableNames);
+		} else { // Cost function will be at the top.
+			coefficients.unshift(rowCoefficients);
+			variableNames.unshift(rowVariableNames);
 		}
-		tableau.push(rowValues);
-		rowValues = [];
+
+		// Reset row trackers.
+		rowCoefficients = [];
+		rowVariableNames = [];
+	});
+
+	const tableau = [];
+	variableNames.forEach((rowVariables, rowIndex) => {
+		let adjustedCoefficients = [];
+		distinctVariableNames.forEach(distinctVariableName => {
+			variableIndex = rowVariables.indexOf(distinctVariableName);
+			adjustedCoefficients.push(variableIndex === -1 ? 0 : coefficients[rowIndex][variableIndex]);
+		});
+		if (rowIndex > 0) {
+			// Add the "RHS" of the equation, which wouldn't be automatically included since
+			// the "RHS" distinct variable name has not been added yet.
+			adjustedCoefficients.push(coefficients[rowIndex].slice(-1)[0])
+		}
+		tableau.push(adjustedCoefficients);
+		adjustedCoefficients = [];
 	});
 
 	return {
 		tableau,
 		distinctVariableNames,
-		comparisons
+		comparisons,
+		optimizationType
 	}
 }
 
