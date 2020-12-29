@@ -57,9 +57,9 @@ const parse = () => {
 			}
 
 			// Number char codes are between 48 and 57.
-			else if (char.charCodeAt(0) >= 48 && char.charCodeAt(0) <= 57
-				&& variableName.length === 0 // variableNames can have numbers too.
-				|| char.charCodeAt(0) === 190) { // Periods (for decimals).
+			else if ((char.charCodeAt(0) >= 48 && char.charCodeAt(0) <= 57
+				&& variableName.length === 0) // variableNames can have numbers too.
+				|| char.charCodeAt(0) === 46) { // Periods (for decimals).
 					coefficient = coefficient.concat(char);
 			}
 			
@@ -150,7 +150,7 @@ const simplex = () => {
 	const { comparisons } = initialTableau;
 	let modifiedTableau = [...initialTableau.tableau];
 
-	phaseOne = generatePhaseOneTableau(modifiedTableau, distinctVariableNames, comparisons);
+	phaseOne = generatePhaseOneInitialTableau(modifiedTableau, distinctVariableNames, comparisons);
 	modifiedTableau = phaseOne.tableau;
 	distinctVariableNames = phaseOne.distinctVariableNames;
 
@@ -277,64 +277,75 @@ const danzig = (modifiedTableau, distinctVariableNames, iterationStart) => {
 	return tableau;
 }
 
-const generatePhaseOneTableau = (tableau, distinctVariableNames, comparisons) => {
-	const modifiedTableau = [...tableau]
+/**
+ * Creates an auxiliary problem such that there is an obvious initial basic feasible solution and an
+ * optimal solution in the auxiliary problem is feasible for the original problem, and can be used
+ * as an initial vertex.
+ *
+ * This function introduces slack variables to make inequalities into equalities
+ * and auxiliary variables to relax the original problem.
+ *
+ * @param tableau 
+ * @param distinctVariableNames 
+ * @param comparisons 
+ */
+const generatePhaseOneInitialTableau = (tableau, distinctVariableNames, comparisons) => {
+	const relaxedTableau = [...tableau];
 	const modifiedVariableNames = [...distinctVariableNames];
 
-	modifiedTableau[0] = modifiedTableau[0].map(_ => 0);
-	modifiedTableau[0].push(0);
+	// Set cost function coefficients to zero in the auxiliary tableau.
+	relaxedTableau[0] = relaxedTableau[0].map(_ => 0);
+	relaxedTableau[0].push(0); // RHS.
 
-	modifiedTableau.forEach((row, rowIndex) => {
-		if (rowIndex === 0) {
-			row.unshift(1);
-		} else {
-			row.unshift(0);
-		}
-	});
-
+	// Add the cost variable.
+	relaxedTableau.forEach((row, rowIndex) => row.unshift(rowIndex === 0 ? 1 : 0));
 	modifiedVariableNames.unshift("-z");
 
-	let auxCounter = 0;
-	for (let i = 1; i < modifiedTableau.length; i++) {
-		if (comparisons[i - 1] === ">=") {
-			modifiedTableau[i].splice(-1, 0, -1);
-		} else {
-			modifiedTableau[i].splice(-1, 0, 1);
-		}
-		modifiedTableau.forEach((row, rowIndex) => {
+	// Introduce slack variables.
+	let slackCounter = 0;
+	for (let i = 1; i < relaxedTableau.length; i++) {
+		relaxedTableau[i].splice(-1, 0, comparisons[i - 1] === ">=" ? -1 : 1);
+		relaxedTableau.forEach((row, rowIndex) => {
 			if (rowIndex === i) {
 				return;
 			}
-
 			row.splice(-1, 0, 0);
 		});
-		modifiedVariableNames.push(`Aux-${auxCounter}`);
+		modifiedVariableNames.push(`s-${slackCounter}`);
+		slackCounter++;
+	}
+
+	// Introduce auxiliary variables.
+	let auxCounter = 0;
+	for (let i = 1; i < relaxedTableau.length; i++) {
+		relaxedTableau[i].splice(-1, 0, 1);
+		relaxedTableau.forEach((row, rowIndex) => {
+			if (rowIndex === i) {
+				return;
+			} else {
+				row.splice(-1, 0, rowIndex === 0 ? -1 : 0);
+			}
+		});
+		modifiedVariableNames.push(`a-${auxCounter}`);
 		auxCounter++;
 	}
 
-	let imgCounter = 0;
-	for (let i = 1; i < modifiedTableau.length; i++) {
-		modifiedTableau[i].splice(-1, 0, 1);
-		modifiedTableau.forEach((row, rowIndex) => {
-			if (rowIndex === i) {
-				return;
-			} else if (rowIndex === 0) {
-				row.splice(-1, 0, -1);
-			} else {
-				row.splice(-1, 0, 0);
-			}
-		});
-		modifiedVariableNames.push(`Img-${imgCounter}`);
-		imgCounter++;
-	}
-
 	modifiedVariableNames.push("RHS");
+
 	return {
-		tableau: modifiedTableau,
+		tableau: relaxedTableau,
 		distinctVariableNames: modifiedVariableNames
-	}
+	};
 }
 
+/**
+ * Generates an html table in the DOM.
+ *
+ * @param headers Table headers.
+ * @param body Table body.
+ * @param caption Table caption.
+ * @param pivotPosition Indicates which position to highlight on the table.
+ */
 const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: null, y: null }) => {
 	const anchor = document.getElementById("tableau-anchor");
 
