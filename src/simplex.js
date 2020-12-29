@@ -1,7 +1,7 @@
 // TODO: catch invalid inputs.
 const parse = () => {
     const textContent = document.getElementById("input").value;
-	
+
     // All coefficients of each equation (row).
     const coefficients = [];
     // All variable names of each equation (row). This is used to keep track of the order
