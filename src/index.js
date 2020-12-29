@@ -165,7 +165,7 @@ const getPivotPosition = (tableau) => {
 }
 
 /**
- * Find the value's of the variables of the cost function based on the given tableau.
+ * Find the value of the variables of the cost function based on the given tableau.
  *
  * @param tableau 
  * @param initialVariableNames 
