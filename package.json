@@ -1,0 +1,29 @@
+{
+	"name": "simplex-calculator",
+	"version": "1.0.0",
+	"description": "A simple calculator for simple linear optimization problems",
+	"main": "simplex.js",
+	"scripts": {
+		"lint": "eslint src/**",
+		"lint:fix": "eslint src/** --fix",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Donisius/simplex-calculator.git"
+	},
+	"keywords": [
+		"Simplex",
+		"Linear",
+		"Optimization"
+	],
+	"author": "Donisius Wigie",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/Donisius/simplex-calculator/issues"
+	},
+	"homepage": "https://github.com/Donisius/simplex-calculator#readme",
+	"devDependencies": {
+		"eslint": "7.16.0"
+	}
+}
