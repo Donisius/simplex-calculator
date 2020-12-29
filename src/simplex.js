@@ -165,37 +165,6 @@ const getPivotPosition = (tableau) => {
 }
 
 /**
- * Find the value of the variables of the cost function based on the given tableau.
- *
- * @param tableau 
- * @param initialVariableNames 
- * @param currentVariableNames 
- */
-const calculateCoefficients = (tableau, initialVariableNames, currentVariableNames) => {
-	const values = [];
-	initialVariableNames.forEach(variableName => {
-		headerPosition = currentVariableNames.indexOf(variableName);
-		const shouldIncludeVariable = tableau.reduce((accumulator, row) =>
-			row[headerPosition] !== 0 ? accumulator + 1 : accumulator,0
-		) === 1;
-		if (shouldIncludeVariable) {
-			const rowIndex = tableau.indexOf(tableau.find(row => row[headerPosition] > 0));
-			const valuePair = {
-				variable: variableName,
-				value: tableau[rowIndex][currentVariableNames.length - 1] / tableau[rowIndex][headerPosition]
-			}
-			values.push(valuePair);
-		} else {
-			values.push({
-				variable: variableName,
-				value: 0
-			});
-		}
-	});
-	return values;
-}
-
-/**
  * For each iteration:
  * 1. Check if there are any positive nonzero coefficients in the cost function, if there are,
  * keep going, if not then an optimal solutuon has been achieved and we can stop.
@@ -296,6 +265,37 @@ const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 		tableau: relaxedTableau,
 		distinctVariableNames: modifiedVariableNames
 	};
+}
+
+/**
+ * Find the value of the variables of the cost function based on the given tableau.
+ *
+ * @param tableau 
+ * @param initialVariableNames 
+ * @param currentVariableNames 
+ */
+const calculateCoefficients = (tableau, initialVariableNames, currentVariableNames) => {
+	const values = [];
+	initialVariableNames.forEach(variableName => {
+		headerPosition = currentVariableNames.indexOf(variableName);
+		const shouldIncludeVariable = tableau.reduce((accumulator, row) =>
+			row[headerPosition] !== 0 ? accumulator + 1 : accumulator,0
+		) === 1;
+		if (shouldIncludeVariable) {
+			const rowIndex = tableau.indexOf(tableau.find(row => row[headerPosition] > 0));
+			const valuePair = {
+				variable: variableName,
+				value: tableau[rowIndex][currentVariableNames.length - 1] / tableau[rowIndex][headerPosition]
+			}
+			values.push(valuePair);
+		} else {
+			values.push({
+				variable: variableName,
+				value: 0
+			});
+		}
+	});
+	return values;
 }
 
 /**
