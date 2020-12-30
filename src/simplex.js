@@ -15,7 +15,8 @@ const parse = () => {
 	// x4 + x3 + x1
 	// and some kind of ordering needs to be maintained to take this into account.
 	const distinctVariableNames = [];
-	let optimizationType = "max"; // Can be `max` or `min`.
+	let optimizationType; // Can be `max` or `min`.
+	const optimizationTypeRegex = /max|min/;
 
 	// This is used to keep track of the coefficients of a particular row. After the row's coefficients
 	// have been added to `coefficients`, this will be reset and populated in the next iteration.
@@ -45,10 +46,10 @@ const parse = () => {
 		let comparison = "";
 
 		// Push row produced at the end to top of the arrays if it's the cost function.
-		let isCostFunction = line.toLowerCase().includes("min") || line.toLowerCase().includes("max");
+		let isCostFunction = optimizationTypeRegex.test(line);
 		if (isCostFunction) {
-			optimizationType = line.toLowerCase().includes("min") ? "min" : "max";
-			line = line.replace(/min|max/, "");
+			optimizationType = line.match(optimizationTypeRegex)[0];
+			line = line.replace(optimizationTypeRegex, "");
 		}
 
 		[...line].forEach((char, columnIndex) => {
@@ -186,6 +187,10 @@ const doSimplex = (tableau, distinctVariableNames, iterationStart) => {
 	while (!modifiedTableau[0].slice(1, -1).every((datapoint => datapoint <= 0))) {
 		pivotPosition = getPivotPosition(modifiedTableau);
 
+		if (pivotPosition.x === undefined || pivotPosition.y === undefined) {
+			return modifiedTableau;
+		}
+
 		modifiedTableau.forEach((row, rowIndex) => {
 			if (rowIndex === pivotPosition.y) {
 				return;
@@ -229,7 +234,8 @@ const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 
 	// Set cost function coefficients to zero in the auxiliary tableau.
 	relaxedTableau[0] = relaxedTableau[0].map(_ => 0);
-	relaxedTableau[0].push(0); // RHS.
+	// Cost function's RHS.
+	relaxedTableau[0].push(0);
 
 	// Add the cost variable.
 	relaxedTableau.forEach((row, rowIndex) => row.unshift(rowIndex === 0 ? 1 : 0));
@@ -370,6 +376,12 @@ const main = () => {
 	const { comparisons } = parsedResult;
 	let tableau = cloneTableau(parsedResult.tableau);
 	const initialTableau = cloneTableau(tableau);
+	const { optimizationType } = parsedResult;
+
+	if (optimizationType === "min") {
+		tableau[0] = tableau[0].map(coefficient => coefficient * -1);
+		initialTableau[0] = initialTableau[0].map(coefficient => coefficient * -1);
+	}
 
 	// PHASE 1
 	const auxiliaryProblem = generatePhaseOne(tableau, distinctVariableNames, comparisons);
@@ -387,7 +399,7 @@ const main = () => {
 		)
 	));
 	generateTable(distinctVariableNames, tableau, "Tableau 0", getPivotPosition(tableau));
-	tableau = doSimplex(tableau, distinctVariableNames, 1, getPivotPosition(tableau));
+	tableau = doSimplex(tableau, distinctVariableNames, 1);
 
 	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 	const phaseOneResultNode = document.createElement("h4");
