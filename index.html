@@ -14,9 +14,15 @@
 		}
 
 		textarea {
+			border: 1px solid #000000;
 			background-color: #f4f4f4;
 			font-family: 'Fira Code', monospace;
 			font-size: 1.2rem;
+		}
+
+		textarea:focus {
+			outline: none !important;
+			border: 0.15rem solid #0f62fe;
 		}
 
 		caption {
@@ -75,6 +81,11 @@
 			cursor: pointer;
 		}
 
+		.solve-button:focus {
+			outline: none !important;
+			background-color: #0353e9;
+		}
+
 		.clear-button {
 			color: #ffffff;
 			background-color: #393939;
@@ -83,6 +94,11 @@
 		.clear-button:hover {
 			background-color: #4c4c4c;
 			cursor: pointer;
+		}
+
+		.clear-button:focus {
+			outline: none !important;
+			background-color: #4c4c4c;
 		}
 
 		.tableau {
@@ -101,7 +117,7 @@
 		}
 
 		th {
-			background-color: #f4f4f4;
+			background-color: #e0e0e0;
 		}
 
 		#results, #instructions {
