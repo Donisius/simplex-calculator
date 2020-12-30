@@ -245,7 +245,7 @@ const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 			}
 			row.splice(-1, 0, 0);
 		});
-		modifiedVariableNames.push(`s-${slackCounter}`);
+		modifiedVariableNames.push(`s${slackCounter}`);
 		slackCounter++;
 	}
 
@@ -260,7 +260,7 @@ const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 				row.splice(-1, 0, rowIndex === 0 ? -1 : 0);
 			}
 		});
-		modifiedVariableNames.push(`a-${auxCounter}`);
+		modifiedVariableNames.push(`a${auxCounter}`);
 		auxCounter++;
 	}
 
@@ -333,7 +333,7 @@ const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: 
 			tableDatapoint = document.createElement("td");
 			tableDatapoint.appendChild(document.createTextNode(datapoint));
 			if (rowIndex === pivotPosition.y && columnIndex === pivotPosition.x) {
-				tableDatapoint.style.backgroundColor = "#E8A87C";
+				tableDatapoint.style.backgroundColor = "#d0e2ff";
 			}
 			tableRow.appendChild(tableDatapoint);
 		});

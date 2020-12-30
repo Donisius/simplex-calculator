@@ -6,19 +6,25 @@
 	<meta name="author" content="Donisius Wigie">
 	<title>👷 Simplex Calculator</title>
 	<link rel="preconnect" href="https://fonts.gstatic.com">
-	<link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@200&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300&display=swap" rel="stylesheet">
 	<style>
-		html, textarea, button, table {
-			font-family: 'Fira Code', monospace;
-			font-color: #696867;
+		html, button, table {
+			font-family: 'IBM Plex Serif', serif;
 		}
 
 		textarea {
+			background-color: #f4f4f4;
+			font-family: 'Fira Code', monospace;
 			font-size: 1.2rem;
 		}
 
 		caption {
 			margin-bottom: 1rem;
+			font-weight: bold;
+		}
+
+		h2 {
 			font-weight: bold;
 		}
 
@@ -48,7 +54,7 @@
 			height: 100%;
 			display: flex;
 			justify-content: center;
-			gap: 0.5rem;
+			gap: 1.5rem;
 		}
 
 		.solve-button, .clear-button {
@@ -60,20 +66,22 @@
 		}
 
 		.solve-button {
-			background-color: #41B3A3;
+			color: #ffffff;
+			background-color: #0f62fe;
 		}
 
 		.solve-button:hover {
-			background-color: #51ede8;
+			background-color: #0353e9;
 			cursor: pointer;
 		}
 
 		.clear-button {
-			background-color: #E27D60;
+			color: #ffffff;
+			background-color: #393939;
 		}
 
 		.clear-button:hover {
-			background-color: #ff865e;
+			background-color: #4c4c4c;
 			cursor: pointer;
 		}
 
@@ -83,13 +91,17 @@
 		}
 
 		table, th, td {
-			border: 1px solid #696867;
+			border: 1px solid #000000;
 			border-collapse: collapse;
 		}
 
 		th, td {
 			padding: 5px;
 			text-align: left;
+		}
+
+		th {
+			background-color: #f4f4f4;
 		}
 
 		#results, #instructions {
@@ -120,4 +132,3 @@ x2 - x3 >= 0
 	<script src="src/simplex.js"></script>
 </body>
 </html>
-
