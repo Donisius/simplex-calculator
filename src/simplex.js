@@ -180,7 +180,7 @@ const getPivotPosition = (tableau) => {
  * @param iterationStart This is for the generation of the tables captions.
  */
 const doSimplex = (tableau, distinctVariableNames, iterationStart) => {
-	modifiedTableau = [...tableau];
+	modifiedTableau = cloneTableau(tableau);
 	let iteration = iterationStart;
 	// TODO: Add cycle detection.
 	while (!modifiedTableau[0].slice(1, -1).every((datapoint => datapoint <= 0))) {
@@ -224,7 +224,7 @@ const doSimplex = (tableau, distinctVariableNames, iterationStart) => {
  * @param comparisons 
  */
 const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
-	const relaxedTableau = [...tableau];
+	const relaxedTableau = cloneTableau(tableau);
 	const modifiedVariableNames = [...distinctVariableNames];
 
 	// Set cost function coefficients to zero in the auxiliary tableau.
@@ -359,6 +359,8 @@ const clearResults = () => {
 	results.style.display = "none";
 };
 
+const cloneTableau = (tableau) => [...tableau].map(row => [...row]);
+
 const main = () => {
 	clearResults();
 	const tableauAnchor = document.getElementById("tableau-anchor");
@@ -366,8 +368,8 @@ const main = () => {
 	let { distinctVariableNames } = parsedResult;
 	let initialVariableNames = [...distinctVariableNames];
 	const { comparisons } = parsedResult;
-	let tableau = [...parsedResult.tableau];
-	const initialTableau= [...tableau];
+	let tableau = cloneTableau(parsedResult.tableau);
+	const initialTableau = cloneTableau(tableau);
 
 	// PHASE 1
 	const auxiliaryProblem = generatePhaseOne(tableau, distinctVariableNames, comparisons);
