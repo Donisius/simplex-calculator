@@ -241,7 +241,12 @@ const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 	// Keep the original cost function in phase one, and carry out the operations as we normally do
 	// with the exception of ignoring the row containing the original cost function as a viable option
 	// as a pivot.
-	const originalCostFunction = [1, ...relaxedTableau[0], ...new Array(tableau.length * 2 - 1).fill(0)];
+	const originalCostFunction = [
+		1, // Cost variable coefficient.
+		...relaxedTableau[0], // Original cost function coefficients.
+		// Introduced slack and auxiliary variables set to zero.
+		...new Array(tableau.length + getNumberOfStrictInequalities(comparisons)).fill(0)
+	];
 
 	// Set cost function coefficients to zero in the auxiliary tableau.
 	relaxedTableau[0] = relaxedTableau[0].map(_ => 0);
@@ -255,7 +260,12 @@ const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 	// Introduce slack variables.
 	let slackCounter = 0;
 	for (let i = 1; i < relaxedTableau.length; i++) {
-		relaxedTableau[i].splice(-1, 0, comparisons[i - 1] === ">=" ? -1 : 1);
+		const comparison = comparisons[i - 1];
+		// If comparison is a strict equality, no need to introduce a slack variable.
+		if (comparison === "=") {
+			continue;
+		}
+		relaxedTableau[i].splice(-1, 0, comparison === ">=" ? -1 : 1);
 		relaxedTableau.forEach((row, rowIndex) => {
 			if (rowIndex === i) {
 				return;
@@ -356,11 +366,15 @@ const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: 
 			tableDatapoint.appendChild(document.createTextNode(datapoint));
 			// Highlight pivot element.
 			if (rowIndex === pivotPosition.y && columnIndex === pivotPosition.x) {
-				tableDatapoint.style.backgroundColor = "#d0e2ff";
+				tableDatapoint.style.backgroundColor = "#fa4d567F";
 			}
-			// Highlight original cost function.
+			// Highlight cost function.
+			if (rowIndex === 0) {
+				tableDatapoint.style.backgroundColor = "#f1c21b7F";
+			}
+			// Highlight original cost function if in Phase `1`.
 			if (phase === 1 && rowIndex === body.length - 1) {
-				tableDatapoint.style.backgroundColor = "#f1c21b";
+				tableDatapoint.style.backgroundColor = "#42be657F";
 			}
 			tableRow.appendChild(tableDatapoint);
 		});
@@ -388,6 +402,9 @@ const clearResults = () => {
 };
 
 const cloneTableau = (tableau) => [...tableau].map(row => [...row]);
+const getNumberOfStrictInequalities = (comparisons) => (
+	comparisons.reduce((count, comparison) => comparison === ">=" || comparison === "<=" ? count + 1 : count, 0)
+);
 
 const main = () => {
 	clearResults();
@@ -415,7 +432,7 @@ const main = () => {
 	phaseOneHeading.style.fontWeight = "bold";
 	tableauAnchor.appendChild(phaseOneHeading);
 
-	generateTable(distinctVariableNames, tableau, "Initial Tableau");
+	generateTable(distinctVariableNames, tableau, "Initial Tableau", undefined, 1);
 	// Use gaussian elimination to get all auxiliary variables in the cost function to zero
 	// by adding all the other rows to the cost function.
 	tableau[0] = tableau[0].map((datapoint, columnIndex) => (
@@ -428,7 +445,7 @@ const main = () => {
 	tableau = doSimplex(tableau, distinctVariableNames, 1, 1);
 
 	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
-	const phaseOneResultNode = document.createElement("h4");
+	const phaseOneResultNode = document.createElement("h2");
 	phaseOneResultNode.appendChild(document.createTextNode(`
 		LO is feasible. The initial vertex calculated is:
 		${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}
@@ -439,12 +456,17 @@ const main = () => {
 	// PHASE 2
 	// Remove imaginary coefficients.
 	tableau.forEach((row) => {
-		row.splice(initialVariableNames.length + initialTableau.length, tableau.length - 2);
+		row.splice(
+			// Number of original cost function coefficients + number of introduced slack variables + cost variable (z).
+			initialVariableNames.length + getNumberOfStrictInequalities(comparisons) + 1,
+			tableau.length - 2 // Number of introduced auxiliary variables.
+		);
 	});
 	// Remove imaginary variables.
 	distinctVariableNames.splice(
-		initialVariableNames.length + initialTableau.length,
-		tableau.length - 2
+		// Number of original cost function coefficients + number of introduced slack variables + cost variable (z).
+		initialVariableNames.length + getNumberOfStrictInequalities(comparisons) + 1,
+		tableau.length - 2 // Number of introduced auxiliary variables.
 	);
 
 	// Make the original cost function as the first row and remove the
