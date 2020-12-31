@@ -161,6 +161,7 @@ th {
 
 .sample-LOs {
 	display: flex;
+	place-content: center;
 	flex-direction: row;
 	gap: 2rem;
 	margin-top: -1.5rem;
@@ -215,6 +216,9 @@ th {
 		width: 100%;
 	}
 	.instructions {
+		width: 100%;
+	}
+	.sample-LOs {
 		width: 100%;
 	}
 }
