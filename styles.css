@@ -175,6 +175,12 @@ th {
 		max-height: 1rem;
 		border-radius: 50%;
 	}
+	th {
+		font-size: small;
+	}
+	td {
+		font-size: small;
+	}
 }
 
 @media only screen and (max-width: 575px) {
