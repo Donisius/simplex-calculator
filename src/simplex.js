@@ -25,7 +25,7 @@ const parse = () => {
 	// have been added to `variableNames`, this will be reset, and populated in the next iteration.
 	let rowVariableNames = [];
 
-	textContent.split(/\n/).forEach((line, rowIndex) => {
+	textContent.split(/\n/).forEach(line => {
 		// If line is just whitespace, ignore it.
 		if (!line.replace(/\s/g, "").length) {
 			return;
@@ -153,14 +153,18 @@ const parse = () => {
  * 1. Among the variables that has a poitive coefficient in the cost function, pick the left-most one.
  * 2. Among the rows that satisfy the min ratio rule, pick the up-most one.
  *
- * @param tableau 
+ * @param tableau
+ * @param phase Phase `1` or Phase `2` of the simplex method.
  */
-const getPivotPosition = (tableau) => {
+const getPivotPosition = (tableau, phase) => {
 	// +1 at the end to account for removing the cost variable from the calculation.
 	const pivotColumnIndex = tableau[0].slice(1).indexOf(Math.max(...tableau[0].slice(1, -1))) + 1;
 	let minRatio = Number.MAX_VALUE;
 	let pivotRowIndex;
-	for (let i = 1; i < tableau.length; i++) {
+	// If phase is `1`, then the last row in the tableau contains the original cost function
+	// and we need to ignore it as a viable option to pivot on.
+	const lastIndex = tableau.length - (phase === 1 ? 1 : 0);
+	for (let i = 1; i < lastIndex; i++) {
 		const ratio = tableau[i][tableau[i].length - 1] / tableau[i][pivotColumnIndex];
 		if (ratio < minRatio && ratio >= 0 && tableau[i][pivotColumnIndex] >= 0) {
 			minRatio = ratio;
@@ -179,13 +183,14 @@ const getPivotPosition = (tableau) => {
  * @param tableau
  * @param distinctVariableNames 
  * @param iterationStart This is for the generation of the tables captions.
+ * @param phase Phase `1` or phase `2` of the simplex method.
  */
-const doSimplex = (tableau, distinctVariableNames, iterationStart) => {
+const doSimplex = (tableau, distinctVariableNames, iterationStart, phase) => {
 	modifiedTableau = cloneTableau(tableau);
 	let iteration = iterationStart;
 	// TODO: Add cycle detection.
 	while (!modifiedTableau[0].slice(1, -1).every((datapoint => datapoint <= 0))) {
-		pivotPosition = getPivotPosition(modifiedTableau);
+		pivotPosition = getPivotPosition(modifiedTableau, phase);
 
 		if (pivotPosition.x === undefined || pivotPosition.y === undefined) {
 			return modifiedTableau;
@@ -209,7 +214,8 @@ const doSimplex = (tableau, distinctVariableNames, iterationStart) => {
 		generateTable(distinctVariableNames,
 			modifiedTableau,
 			`Tableau ${iteration}`,
-			getPivotPosition(modifiedTableau)
+			getPivotPosition(modifiedTableau, phase),
+			phase
 		);
 		iteration++;
 	}
@@ -231,6 +237,11 @@ const doSimplex = (tableau, distinctVariableNames, iterationStart) => {
 const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 	const relaxedTableau = cloneTableau(tableau);
 	const modifiedVariableNames = [...distinctVariableNames];
+
+	// Keep the original cost function in phase one, and carry out the operations as we normally do
+	// with the exception of ignoring the row containing the original cost function as a viable option
+	// as a pivot.
+	const originalCostFunction = [1, ...relaxedTableau[0], ...new Array(tableau.length * 2 - 1).fill(0)];
 
 	// Set cost function coefficients to zero in the auxiliary tableau.
 	relaxedTableau[0] = relaxedTableau[0].map(_ => 0);
@@ -271,6 +282,9 @@ const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 	}
 
 	modifiedVariableNames.push("RHS");
+
+	// Add original cost function as the last row of the tableau.
+	relaxedTableau.push(originalCostFunction);
 
 	return {
 		tableau: relaxedTableau,
@@ -316,8 +330,10 @@ const calculateCoefficients = (tableau, initialVariableNames, currentVariableNam
  * @param body Table body.
  * @param caption Table caption.
  * @param pivotPosition Indicates which position to highlight on the table.
+ * @param phase Phase `1` or phase `2` of the simplex method. In phase 1 the function highlights the
+ * row containing the original cost function.
  */
-const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: null, y: null }) => {
+const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: null, y: null }, phase) => {
 	const anchor = document.getElementById("tableau-anchor");
 
 	const table = document.createElement("table");
@@ -338,8 +354,13 @@ const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: 
 		row.forEach((datapoint, columnIndex) => {
 			tableDatapoint = document.createElement("td");
 			tableDatapoint.appendChild(document.createTextNode(datapoint));
+			// Highlight pivot element.
 			if (rowIndex === pivotPosition.y && columnIndex === pivotPosition.x) {
 				tableDatapoint.style.backgroundColor = "#d0e2ff";
+			}
+			// Highlight original cost function.
+			if (phase === 1 && rowIndex === body.length - 1) {
+				tableDatapoint.style.backgroundColor = "#f1c21b";
 			}
 			tableRow.appendChild(tableDatapoint);
 		});
@@ -394,12 +415,13 @@ const main = () => {
 	// Use gaussian elimination to get all auxiliary variables in the cost function to zero
 	// by adding all the other rows to the cost function.
 	tableau[0] = tableau[0].map((datapoint, columnIndex) => (
-		datapoint + tableau.slice(1).reduce((currentTotal, row) =>
+		// Ignore the cost variable and the RHS.
+		datapoint + tableau.slice(1, -1).reduce((currentTotal, row) =>
 			currentTotal + row[columnIndex], 0
 		)
 	));
-	generateTable(distinctVariableNames, tableau, "Tableau 0", getPivotPosition(tableau));
-	tableau = doSimplex(tableau, distinctVariableNames, 1);
+	generateTable(distinctVariableNames, tableau, "Tableau 0", getPivotPosition(tableau, 1), 1);
+	tableau = doSimplex(tableau, distinctVariableNames, 1, 1);
 
 	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 	const phaseOneResultNode = document.createElement("h4");
@@ -413,15 +435,17 @@ const main = () => {
 	// PHASE 2
 	// Remove imaginary coefficients.
 	tableau.forEach((row) => {
-		row.splice(initialVariableNames[0].length + initialTableau.length, tableau.length - 1);
+		row.splice(initialVariableNames.length + initialTableau.length, tableau.length - 2);
 	});
 	// Remove imaginary variables.
 	distinctVariableNames.splice(
-		initialVariableNames[0].length + initialTableau.length,
-		tableau.length - 1
+		initialVariableNames.length + initialTableau.length,
+		tableau.length - 2
 	);
-	// Use initial cost function.
-	tableau[0].splice(1, initialTableau[0].length, ...initialTableau[0]);
+
+	// Make the original cost function as the first row and remove the
+	// original cost function from the last row.
+	tableau[0] = tableau.pop();
 
 	tableauAnchor.appendChild(document.createElement("h2").appendChild(document.createTextNode("PHASE 2")));
 
@@ -429,14 +453,15 @@ const main = () => {
 		distinctVariableNames,
 		tableau,
 		"Initial Tableau",
-		getPivotPosition(tableau)
+		getPivotPosition(tableau, 2),
+		2
 	);
-	tableau = doSimplex(tableau, distinctVariableNames, 0);
+	tableau = doSimplex(tableau, distinctVariableNames, 0, 2);
 	results = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 
 	const displayResults = document.getElementById("results");
 	displayResults.appendChild(document.createTextNode(`
-		The optimal value of ${tableau[0][distinctVariableNames.length - 1] * -1}
+		The optimal value of ${tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1)}
 		can be achieved with: ${results.map(result => `${result.variable} = ${result.value}`)}
 	`));
 	displayResults.style.display = "block";
