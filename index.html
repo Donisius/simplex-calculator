@@ -8,127 +8,36 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com">
 	<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@200&display=swap" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300&display=swap" rel="stylesheet">
-	<style>
-		html, button, table {
-			font-family: 'IBM Plex Serif', serif;
-		}
-
-		textarea {
-			border: 1px solid #000000;
-			background-color: #f4f4f4;
-			font-family: 'Fira Code', monospace;
-			font-size: 1.2rem;
-		}
-
-		textarea:focus {
-			outline: none !important;
-			border: 0.15rem solid #0f62fe;
-		}
-
-		caption {
-			margin-bottom: 1rem;
-			font-weight: bold;
-		}
-
-		h2 {
-			font-weight: bold;
-		}
-
-		.wrapper {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-		}
-
-		#input {
-			width: 70%;
-			margin-bottom: 1rem;
-		}
-
-		.tableau-wrapper {
-			width: 100%;
-			display:flex;
-			justify-content: center;
-		}
-
-		#tableau-anchor {
-			width: 70%;
-		}
-
-		.button-wrapper {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			justify-content: center;
-			gap: 1.5rem;
-		}
-
-		.solve-button, .clear-button {
-			width: 25%;
-			height: 2.5rem;
-			padding: 0;
-			border: none;
-			font-weight: bold;
-		}
-
-		.solve-button {
-			color: #ffffff;
-			background-color: #0f62fe;
-		}
-
-		.solve-button:hover {
-			background-color: #0353e9;
-			cursor: pointer;
-		}
-
-		.solve-button:focus {
-			outline: none !important;
-			background-color: #0353e9;
-		}
-
-		.clear-button {
-			color: #ffffff;
-			background-color: #393939;
-		}
-
-		.clear-button:hover {
-			background-color: #4c4c4c;
-			cursor: pointer;
-		}
-
-		.clear-button:focus {
-			outline: none !important;
-			background-color: #4c4c4c;
-		}
-
-		.tableau {
-			margin-top: 1rem;
-			width: 100%;
-		}
-
-		table, th, td {
-			border: 1px solid #000000;
-			border-collapse: collapse;
-		}
-
-		th, td {
-			padding: 5px;
-			text-align: left;
-		}
-
-		th {
-			background-color: #e0e0e0;
-		}
-
-		#results, #instructions {
-			display:none;
-		}
-	</style>
+	<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 	<div class="wrapper">
 		<h1>Simplex Calculator</h1>
-		<h4>Enter a linear optimization problem in the same format as the example below and click solve.</h4>
+		<h4 style="width: 50%; margin-top: -0.5rem">
+			Enter a linear optimization problem click solve.
+			The cost function to maximize or minimize should be indicated with "min" or "max".
+			The constraints should be strict inequalities or strict equalities.
+			All functions must be on seperate lines.
+			For example:
+		</h4>
+		<div class="sample-LOs">
+			<h4 class="LO">
+				max 3x1 + x2 + 3x3
+				2x1 + 3x2 + 5x3 <= 64
+				x1 - x2 - x3 >= 0
+				x2 - x3 >= 2
+			</h4>
+			<h4>
+				or
+			</h4>
+			<h4 class="LO">
+				min 12x1 + 16x2
+				x1 + 2x2 >= 40
+				x1 + x2 >= 30
+				x1 >= 0
+				x2 >= 0
+			</h4>
+		</div>
 		<textarea id="input" rows="10", cols="100">
 max 2x1 + 3x2 + 6x3
 x1 + 2x2 + 2x3 <= 20
@@ -140,7 +49,22 @@ x2 - x3 >= 0
 			<button onclick="clearResults()" class="clear-button">Clear</button>
 		</div>
 
-		<h4 id="results"></h4>
+		<h2 id="results"></h4>
+		<div id="legend">
+			<h4>Shown below is each tableau used to calculate the result.</h4>
+			<div class="legend-item">
+				<div class="color-sample" style="background: #d0e2ff;"></div>
+				<h4 class="legend-text">
+					Pivot elements will be highlighted with this color.
+				</h4>
+			</div>
+			<div class="legend-item">
+				<div class="color-sample" style="background: #f1c21b;"></div>
+				<h4 class="legend-text">
+					The row containing the original cost function in phase one will be highlighted with this color.
+				</h4>
+			</div>
+		</div>
 	</div>
 	<div class="tableau-wrapper">
 		<div id="tableau-anchor"></div>

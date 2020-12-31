@@ -1,0 +1,151 @@
+html, button, table {
+	font-family: 'IBM Plex Serif', serif;
+}
+
+textarea {
+	border: 1px solid #000000;
+	background-color: #f4f4f4;
+	font-family: 'Fira Code', monospace;
+	font-size: 1.2rem;
+}
+
+textarea:focus {
+	outline: none !important;
+	border: 0.15rem solid #0f62fe;
+}
+
+caption {
+	margin-bottom: 1rem;
+	font-weight: bold;
+}
+
+h2 {
+	font-weight: bold;
+}
+
+.wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+#input {
+	width: 70%;
+	margin-bottom: 1rem;
+}
+
+.tableau-wrapper {
+	width: 100%;
+	display:flex;
+	justify-content: center;
+}
+
+#tableau-anchor {
+	width: 70%;
+}
+
+.button-wrapper {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	gap: 1.5rem;
+}
+
+.solve-button, .clear-button {
+	width: 25%;
+	height: 2.5rem;
+	padding: 0;
+	border: none;
+	font-weight: bold;
+}
+
+.solve-button {
+	color: #ffffff;
+	background-color: #0f62fe;
+}
+
+.solve-button:hover {
+	background-color: #0353e9;
+	cursor: pointer;
+}
+
+.solve-button:focus {
+	outline: none !important;
+	background-color: #0353e9;
+}
+
+.clear-button {
+	color: #ffffff;
+	background-color: #393939;
+}
+
+.clear-button:hover {
+	background-color: #4c4c4c;
+	cursor: pointer;
+}
+
+.clear-button:focus {
+	outline: none !important;
+	background-color: #4c4c4c;
+}
+
+.tableau {
+	margin-top: 1rem;
+	width: 100%;
+}
+
+table, th, td {
+	border: 1px solid #000000;
+	border-collapse: collapse;
+}
+
+th, td {
+	padding: 5px;
+	text-align: left;
+}
+
+th {
+	background-color: #e0e0e0;
+}
+
+#results, #legend {
+	display: none;
+}
+
+#legend {
+	width: 70%; margin-bottom: 2rem;
+}
+
+.legend-item {
+	display: flex;
+	flex-direction: row;
+	gap: 0.5rem;
+	margin-top: 1rem;
+}
+
+.color-sample {
+	min-width: 2rem;
+	min-height: 2rem;
+	max-height: 2rem;
+	max-height: 2rem;
+	border-radius: 50%;
+}
+
+.legend-text {
+	margin: 0;
+	line-height: 1.5;
+	vertical-align: middle;
+}
+
+.sample-LOs {
+	display: flex;
+	flex-direction: row;
+	gap: 2rem;
+	margin-top: -1.5rem;
+}
+
+.LO {
+	white-space: pre-line;
+	margin-top: 0;
+}

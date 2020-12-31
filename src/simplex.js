@@ -384,6 +384,7 @@ const clearResults = () => {
 		tableauAnchor.removeChild(tableauAnchor.lastChild);
 	}
 	results.style.display = "none";
+	document.getElementById("legend").style.display = "none";
 };
 
 const cloneTableau = (tableau) => [...tableau].map(row => [...row]);
@@ -409,7 +410,10 @@ const main = () => {
 	tableau = auxiliaryProblem.tableau;
 	distinctVariableNames = auxiliaryProblem.distinctVariableNames;
 
-	tableauAnchor.appendChild(document.createElement("h2").appendChild(document.createTextNode("PHASE 1")));
+	const phaseOneHeading = document.createElement("h2");
+	phaseOneHeading.appendChild(document.createTextNode("Phase One"));
+	phaseOneHeading.style.fontWeight = "bold";
+	tableauAnchor.appendChild(phaseOneHeading);
 
 	generateTable(distinctVariableNames, tableau, "Initial Tableau");
 	// Use gaussian elimination to get all auxiliary variables in the cost function to zero
@@ -447,7 +451,10 @@ const main = () => {
 	// original cost function from the last row.
 	tableau[0] = tableau.pop();
 
-	tableauAnchor.appendChild(document.createElement("h2").appendChild(document.createTextNode("PHASE 2")));
+	const phaseTwoHeading = document.createElement("h2");
+	phaseTwoHeading.appendChild(document.createTextNode("Phase Two"));
+	phaseTwoHeading.style.fontWeight = "bold";
+	tableauAnchor.appendChild(phaseTwoHeading);
 
 	generateTable(
 		distinctVariableNames,
@@ -461,8 +468,10 @@ const main = () => {
 
 	const displayResults = document.getElementById("results");
 	displayResults.appendChild(document.createTextNode(`
-		The optimal value of ${tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1)}
+		The ${optimizationType === "max" ? "maximum" : "minimum"} value of
+		${tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1)}
 		can be achieved with: ${results.map(result => `${result.variable} = ${result.value}`)}
 	`));
 	displayResults.style.display = "block";
+	document.getElementById("legend").style.display = "block";
 };
