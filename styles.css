@@ -113,6 +113,10 @@ th {
 	display: none;
 }
 
+#results {
+	margin-top: 2rem;
+}
+
 #legend {
 	width: 70%; margin-bottom: 2rem;
 }
