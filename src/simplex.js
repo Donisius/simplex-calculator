@@ -144,7 +144,7 @@ const parse = () => {
 };
 
 /**
- * We use Danzig's here to calculate which element to use as the pivot. It goes as follows:
+ * We use Dantzig's here to calculate which element to use as the pivot. It goes as follows:
  * 1. We pick the column where the objective function's coefficient is post positive (largest).
  * 2. Once a column is decided, the row to pivot on is determined by the smallest nonnegative ratio
  * of the RHS by the corresponding positive coefficient in the pivoting column.
@@ -178,7 +178,7 @@ const getPivotPosition = (tableau, phase) => {
  * For each iteration:
  * 1. Check if there are any positive nonzero coefficients in the cost function, if there are,
  * keep going, if not then an optimal solutuon has been achieved and we can stop.
- * 2. Get the pivot position using Danzig's rule. Check out `getPivotPosition` for details.
+ * 2. Get the pivot position using Dantzig's rule. Check out `getPivotPosition` for details.
  *
  * @param tableau
  * @param distinctVariableNames 
@@ -187,6 +187,10 @@ const getPivotPosition = (tableau, phase) => {
  */
 const doSimplex = (tableau, distinctVariableNames, iterationStart, phase) => {
 	modifiedTableau = cloneTableau(tableau);
+	if (isProblemUnbounded(modifiedTableau)) {
+		generateResultNode("The problem is unbounded and no optimal solution exists.");
+		return;
+	}
 	let iteration = iterationStart;
 	// TODO: Add cycle detection.
 	while (!modifiedTableau[0].slice(1, -1).every((datapoint => datapoint <= 0))) {
@@ -405,6 +409,27 @@ const cloneTableau = (tableau) => [...tableau].map(row => [...row]);
 const getNumberOfStrictInequalities = (comparisons) => (
 	comparisons.reduce((count, comparison) => comparison === ">=" || comparison === "<=" ? count + 1 : count, 0)
 );
+// This should be used at the end of phase one.
+// The problem is feasible if and only if all the coefficients in the auxiliary cost function is <= 0
+// AND the optimal solution to the auxiliary problem is 0.
+const isProblemFeasible = (tableau) => (
+	tableau[0].slice(1, -1).every(coefficient => coefficient <= 0) && tableau[0][tableau.length - 1] === 0
+);
+// The problem is unbounded if at any point there is a cost function coefficient that is
+// strictly positive and can not be pivoted out.
+const isProblemUnbounded = (tableau) => (
+	tableau[0].slice(1, -1).some((costCoefficient, columnIndex) => (
+		costCoefficient > 0
+			? tableau.slice(1).every(row => row[columnIndex + 1] <= 0) // columnIndex + 1 to accomodate for slice.
+			: false
+	))
+);
+const generateResultNode = (text) => {
+	const displayResults = document.getElementById("results");
+	displayResults.appendChild(document.createTextNode(text));
+	displayResults.style.display = "block";
+	document.getElementById("legend").style.display = "block";
+};
 
 const main = () => {
 	clearResults();
@@ -444,14 +469,25 @@ const main = () => {
 	generateTable(distinctVariableNames, tableau, "Tableau 0", getPivotPosition(tableau, 1), 1);
 	tableau = doSimplex(tableau, distinctVariableNames, 1, 1);
 
+	const isFeasible = isProblemFeasible(tableau);
+
 	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 	const phaseOneResultNode = document.createElement("h2");
 	phaseOneResultNode.appendChild(document.createTextNode(`
-		LO is feasible. The initial vertex calculated is:
-		${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}
+		${
+	isFeasible
+		?`The problem is feasible. The initial vertex calculated is:
+				${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}`
+		: "The problem is infeasible."
+}
 	`));
 	phaseOneResultNode.style.textAlign = "center";
 	tableauAnchor.appendChild(phaseOneResultNode);
+
+	if (!isFeasible) {
+		generateResultNode("The problem is infeasible.");
+		return;
+	}
 
 	// PHASE 2
 	// Remove imaginary coefficients.
@@ -488,12 +524,9 @@ const main = () => {
 	tableau = doSimplex(tableau, distinctVariableNames, 0, 2);
 	results = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 
-	const displayResults = document.getElementById("results");
-	displayResults.appendChild(document.createTextNode(`
+	generateResultNode(`
 		The ${optimizationType === "max" ? "maximum" : "minimum"} value of
 		${tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1)}
 		can be achieved with: ${results.map(result => `${result.variable} = ${result.value}`)}
-	`));
-	displayResults.style.display = "block";
-	document.getElementById("legend").style.display = "block";
+	`);
 };
