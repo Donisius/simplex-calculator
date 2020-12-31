@@ -31,7 +31,7 @@ h2 {
 
 .title-wrapper {
 	width: 70%;
-	text-align: center;
+	text-align: center !important;
 }
 
 #input {
