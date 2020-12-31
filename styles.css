@@ -21,6 +21,7 @@ caption {
 
 h2 {
 	font-weight: bold;
+	text-decoration: underline;
 }
 
 .wrapper {
@@ -32,6 +33,11 @@ h2 {
 .title-wrapper {
 	width: 70%;
 	text-align: center !important;
+}
+
+.instructions {
+	width: 50%;
+	margin-top: -0.5rem;
 }
 
 #input {
@@ -203,6 +209,12 @@ th {
 		display: inline-block;
 	}
 	#tableau-anchor {
+		width: 100%;
+	}
+	.title-wrapper {
+		width: 100%;
+	}
+	.instructions {
 		width: 100%;
 	}
 }

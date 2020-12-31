@@ -428,11 +428,12 @@ const isProblemUnbounded = (tableau) => (
 	))
 );
 
-const generateResultNode = (text) => {
+const generateResultNodeAndScrollIntoView = (text) => {
 	const displayResults = document.getElementById("results");
 	displayResults.appendChild(document.createTextNode(text));
 	displayResults.style.display = "block";
 	document.getElementById("legend").style.display = "block";
+	displayResults.scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
 const main = () => {
@@ -491,7 +492,7 @@ const main = () => {
 	tableauAnchor.appendChild(phaseOneResultNode);
 
 	if (!isFeasible) {
-		generateResultNode("The problem is infeasible.");
+		generateResultNodeAndScrollIntoView("The problem is infeasible.");
 		return;
 	}
 
@@ -530,7 +531,7 @@ const main = () => {
 	tableau = doSimplex(tableau, distinctVariableNames, 0, 2);
 	results = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 
-	generateResultNode(`
+	generateResultNodeAndScrollIntoView(`
 		The ${optimizationType === "max" ? "maximum" : "minimum"} value of
 		${tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1)}
 		can be achieved with: ${results.map(result => `${result.variable} = ${result.value}`)}
