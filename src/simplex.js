@@ -473,14 +473,16 @@ const main = () => {
 
 	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 	const phaseOneResultNode = document.createElement("h2");
+	/* eslint-disable indent */
 	phaseOneResultNode.appendChild(document.createTextNode(`
 		${
-	isFeasible
-		?`The problem is feasible. The initial vertex calculated is:
+			isFeasible
+				?`The problem is feasible. The initial vertex calculated is:
 				${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}`
-		: "The problem is infeasible."
-}
+				: "The problem is infeasible."
+		}
 	`));
+	/* eslint-enable indent */
 	phaseOneResultNode.style.textAlign = "center";
 	tableauAnchor.appendChild(phaseOneResultNode);
 
