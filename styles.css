@@ -117,8 +117,13 @@ th {
 	margin-top: 2rem;
 }
 
+.results-wrapper {
+	width: 70%;
+}
+
 #legend {
-	width: 70%; margin-bottom: 2rem;
+	width: 70%;
+	margin-bottom: 2rem;
 }
 
 .legend-item {
@@ -152,4 +157,40 @@ th {
 .LO {
 	white-space: pre-line;
 	margin-top: 0;
+}
+
+@media only screen and (max-width: 820px) {
+	h4, textarea, button {
+		font-size: small;
+	}
+
+	h2 {
+		font-size: medium
+	}
+
+	.color-sample {
+		min-width: 1rem;
+		min-height: 1em;
+		max-height: 1rem;
+		max-height: 1rem;
+		border-radius: 50%;
+	}
+}
+
+@media only screen and (max-width: 575px) {
+	table {
+		width: 100%;
+	}
+	th {
+		font-size: x-small;
+	}
+	td {
+		font-size: x-small;
+	}
+	.tableau-wrapper {
+		display: inline-block;
+	}
+	#tableau-anchor {
+		width: 100%;
+	}
 }

@@ -406,15 +406,18 @@ const clearResults = () => {
 };
 
 const cloneTableau = (tableau) => [...tableau].map(row => [...row]);
+
 const getNumberOfStrictInequalities = (comparisons) => (
 	comparisons.reduce((count, comparison) => comparison === ">=" || comparison === "<=" ? count + 1 : count, 0)
 );
+
 // This should be used at the end of phase one.
 // The problem is feasible if and only if all the coefficients in the auxiliary cost function is <= 0
 // AND the optimal solution to the auxiliary problem is 0.
 const isProblemFeasible = (tableau) => (
 	tableau[0].slice(1, -1).every(coefficient => coefficient <= 0) && tableau[0][tableau.length - 1] === 0
 );
+
 // The problem is unbounded if at any point there is a cost function coefficient that is
 // strictly positive and can not be pivoted out.
 const isProblemUnbounded = (tableau) => (
@@ -424,6 +427,7 @@ const isProblemUnbounded = (tableau) => (
 			: false
 	))
 );
+
 const generateResultNode = (text) => {
 	const displayResults = document.getElementById("results");
 	displayResults.appendChild(document.createTextNode(text));
