@@ -29,6 +29,11 @@ h2 {
 	align-items: center;
 }
 
+.title-wrapper {
+	width: 70%;
+	text-align: center;
+}
+
 #input {
 	width: 70%;
 	margin-bottom: 1rem;
@@ -119,6 +124,7 @@ th {
 
 .results-wrapper {
 	width: 70%;
+	text-align: center;
 }
 
 #legend {
