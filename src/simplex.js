@@ -451,7 +451,11 @@ const getNumberOfStrictInequalities = (comparisons) => (
 // The problem is feasible if and only if all the coefficients in the auxiliary cost function is <= 0
 // AND the optimal solution to the auxiliary problem is 0.
 const isProblemFeasible = (tableau) => (
-	tableau[0].slice(1, -1).every(coefficient => coefficient <= 0) && tableau[0][tableau[0].length - 1] === 0
+	// TODO: Deal with floating point numbers better than just getting the floor when checking for equality.
+	// Issue: https://github.com/Donisius/simplex-calculator/issues/14
+	tableau[0]
+		.slice(1, -1)
+		.every(coefficient => coefficient <= 0) && Math.floor(tableau[0][tableau[0].length - 1]) === 0
 );
 
 // The problem is unbounded if at any point there is a cost function coefficient that is
