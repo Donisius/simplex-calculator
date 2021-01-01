@@ -76,11 +76,12 @@ export const generateResultNodeAndScrollIntoView = (text) => {
 	displayResults.scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
-export const displayPhaseOneResult = (text) => {
+export const displayPhaseResult = (text) => {
 	const tableauAnchor = document.getElementById("tableau-anchor");
 	const phaseOneResultNode = document.createElement("h2");
 	phaseOneResultNode.appendChild(document.createTextNode(text));
 	phaseOneResultNode.style.textAlign = "center";
+	phaseOneResultNode.style.margin = "3rem 0rem 3rem 0rem";
 	tableauAnchor.appendChild(phaseOneResultNode);
 };
 
@@ -91,10 +92,11 @@ export const setInvalidInputState = (invalidText) => {
 
 export const generatePhaseHeading = (headingText) => {
 	const tableauAnchor = document.getElementById("tableau-anchor");
-	const phaseTwoHeading = document.createElement("h2");
-	phaseTwoHeading.appendChild(document.createTextNode(headingText));
-	phaseTwoHeading.style.fontWeight = "bold";
-	tableauAnchor.appendChild(phaseTwoHeading);
+	const phaseHeading = document.createElement("h2");
+	phaseHeading.appendChild(document.createTextNode(headingText));
+	phaseHeading.style.fontWeight = "bold";
+	phaseHeading.style.textDecoration = "underline";
+	tableauAnchor.appendChild(phaseHeading);
 };
 
 // Only reformat the number if it has a decimal value.

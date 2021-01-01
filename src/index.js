@@ -14,7 +14,7 @@ import {
 	generateTable,
 	clearResults,
 	generateResultNodeAndScrollIntoView,
-	displayPhaseOneResult,
+	displayPhaseResult,
 	generatePhaseHeading,
 	formatNumber
 } from "./dom-utils.js";
@@ -51,7 +51,7 @@ const runSimplex = () => {
 	const isFeasible = isProblemFeasible(tableau);
 	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 	/* eslint-disable indent */
-	displayPhaseOneResult(`
+	displayPhaseResult(`
 		${
 			isFeasible
 				? `The problem is feasible. The initial vertex calculated is:
@@ -79,6 +79,14 @@ const runSimplex = () => {
 			${formatNumber(tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1))}
 			can be achieved with: ${results.map(result => `${result.variable} = ${formatNumber(result.value)}`)}
 		`);
+
+		displayPhaseResult(`
+			The ${optimizationType === "max" ? "maximum" : "minimum"} value of
+			${formatNumber(tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1))}
+			can be achieved with: ${results.map(result => `${result.variable} = ${formatNumber(result.value)}`)}
+		`);
+	} else {
+		displayPhaseResult("A positive cost function coefficient is unable to be cancelled out. The problem is unbounded.");
 	}
 };
 

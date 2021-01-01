@@ -21,7 +21,6 @@ caption {
 
 h2 {
 	font-weight: bold;
-	text-decoration: underline;
 }
 
 .wrapper {
@@ -141,11 +140,12 @@ th {
 }
 
 #legend {
-	width: 70%;
 	margin-bottom: 2rem;
+	text-align: center;
 }
 
 .legend-item {
+	align-items: center;
 	display: flex;
 	flex-direction: row;
 	gap: 0.5rem;
@@ -153,6 +153,7 @@ th {
 }
 
 .color-sample {
+	display:inline-block;
 	min-width: 2rem;
 	min-height: 2rem;
 	max-height: 2rem;
@@ -161,6 +162,7 @@ th {
 }
 
 .legend-text {
+	display:inline-block;
 	margin: 0;
 	line-height: 1.5;
 	vertical-align: middle;

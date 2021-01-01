@@ -3,7 +3,7 @@ import { setInvalidInputState } from "./dom-utils.js";
 const noOptimizationTypeText = "Indicate a cost function by putting 'max' or 'min' on the same line as the cost equation. Please refer to the examples above.";
 const noLeftVariablesText = "Variables must be on the left hand side of each constraint. Please refer to the examples above.";
 const strictComparatorsOnlyText = "Comparators must all be one of the following: >=, =, or <=. Please refer to the example above.";
-const noSpecialVariablesText = (variableName) => `${variableName} is a reserved variable. Variable names cannot be 's' followed by a number or 'a' followed by a number`;
+const noSpecialVariablesText = (variableName = "Variable name") => `${variableName} is a reserved variable. Variable names cannot be 's' followed by a number or 'a' followed by a number`;
 
 export const parse = () => {
 	const textContent = document.getElementById("input").value;
