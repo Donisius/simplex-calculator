@@ -144,6 +144,10 @@ th {
 	text-align: center;
 }
 
+.legend-items {
+	display: inline-block;
+}
+
 .legend-item {
 	align-items: center;
 	display: flex;
