@@ -522,9 +522,8 @@ const transitionToPhaseTwo = (tableau, distinctVariableNames, initialVariableNam
 const main = () => {
 	clearResults();
 	const parsedResult = parse();
-	const { isInvalid } = parsedResult;
 
-	if (isInvalid) {
+	if (parsedResult.isInvalid) {
 		return;
 	}
 

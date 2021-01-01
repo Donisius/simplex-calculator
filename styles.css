@@ -180,7 +180,7 @@ th {
 }
 
 @media only screen and (max-width: 820px) {
-	h4, textarea, button {
+	h4, textarea, button, th, td {
 		font-size: small;
 	}
 
@@ -195,16 +195,10 @@ th {
 		max-height: 1rem;
 		border-radius: 50%;
 	}
-	th {
-		font-size: small;
-	}
-	td {
-		font-size: small;
-	}
 }
 
 @media only screen and (max-width: 575px) {
-	table {
+	table, #tableau-anchor, .title-wrapper, .instructions, .sample-LOs {
 		width: 100%;
 	}
 	th {
@@ -215,17 +209,5 @@ th {
 	}
 	.tableau-wrapper {
 		display: inline-block;
-	}
-	#tableau-anchor {
-		width: 100%;
-	}
-	.title-wrapper {
-		width: 100%;
-	}
-	.instructions {
-		width: 100%;
-	}
-	.sample-LOs {
-		width: 100%;
 	}
 }
