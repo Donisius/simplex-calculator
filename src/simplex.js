@@ -17,6 +17,7 @@ const parse = () => {
 	const distinctVariableNames = [];
 	let optimizationType; // Can be `max` or `min`.
 	const optimizationTypeRegex = /max|min/;
+	const specialVariableRegex = /[s]{1}[0-9]+|[a]{1}[0-9]+/;
 
 	// This is used to keep track of the coefficients of a particular row. After the row's coefficients
 	// have been added to `coefficients`, this will be reset and populated in the next iteration.
@@ -25,10 +26,19 @@ const parse = () => {
 	// have been added to `variableNames`, this will be reset, and populated in the next iteration.
 	let rowVariableNames = [];
 
-	textContent.split(/\n/).forEach(line => {
+	const separatedEquations = textContent.split(/\n/);
+
+	if (!optimizationTypeRegex.test(textContent)) {
+		setInvalidInputState("Indicate a cost function by putting 'max' or 'min' on the same line as the cost equation. Please refer to the examples above.");
+		return { isInvalid: true };
+	}
+
+	// Cannot use array array loop methods because we want to immediately return from the whole function if
+	// an invalid input is detected at any point.
+	for (line of separatedEquations) {
 		// If line is just whitespace, ignore it.
 		if (!line.replace(/\s/g, "").length) {
-			return;
+			break;
 		}
 
 		// This is a pretty straightforward parsing algorithm. TODO: Make this more robust.
@@ -52,7 +62,10 @@ const parse = () => {
 			line = line.replace(optimizationTypeRegex, "");
 		}
 
-		[...line].forEach((char, columnIndex) => {
+		// Cannot use array array loop methods because we want to immediately return from the whole function if
+		// an invalid input is detected at any point.
+		for (let columnIndex = 0; columnIndex < line.length; columnIndex++) {
+			const char = line[columnIndex];
 			if (char === "<" || char === "=" || char === ">") {
 				comparison = comparison.concat(char);
 			}
@@ -65,6 +78,10 @@ const parse = () => {
 			}
 			
 			else if (char !== "+" && char !== " " && char !== "-") {
+				if (comparison.length) {
+					setInvalidInputState("Variables must be on the left hand side of each constraint. Please refer to the examples above.");
+					return { isInvalid: true };
+				}
 				variableName = variableName.concat(char);
 			}
 			
@@ -92,6 +109,11 @@ const parse = () => {
 
 				rowCoefficients.push(parseFloat(coefficient));
 				if (variableName.length) {
+					if (specialVariableRegex.test(variableName)) {
+						setInvalidInputState(`${variableName} is a reserved variable. Variable names cannot be 's' followed by a number or 'a' followed by a number`);
+						return { isInvalid: true };
+					}
+
 					rowVariableNames.push(variableName);
 					if (!distinctVariableNames.includes(variableName)) {
 						distinctVariableNames.push(variableName);
@@ -103,9 +125,13 @@ const parse = () => {
 				coefficient = "";
 				variableName = "";
 			}
-		});
+		}
 
 		if (!isCostFunction) {
+			if (![">=", "=", "<="].includes(comparison)) {
+				setInvalidInputState("Comparators must all be one of the following: >=, =, or <=. Please refer to the example above.");
+				return { isInvalid: true };
+			}
 			comparisons.push(comparison);
 			coefficients.push(rowCoefficients);
 			variableNames.push(rowVariableNames);
@@ -117,7 +143,7 @@ const parse = () => {
 		// Reset row trackers.
 		rowCoefficients = [];
 		rowVariableNames = [];
-	});
+	}
 
 	const tableau = [];
 	variableNames.forEach((rowVariables, rowIndex) => {
@@ -139,7 +165,8 @@ const parse = () => {
 		tableau,
 		distinctVariableNames,
 		comparisons,
-		optimizationType
+		optimizationType,
+		isInvalid: false
 	};
 };
 
@@ -188,7 +215,7 @@ const getPivotPosition = (tableau, phase) => {
 const doSimplex = (tableau, distinctVariableNames, iterationStart, phase) => {
 	modifiedTableau = cloneTableau(tableau);
 	if (isProblemUnbounded(modifiedTableau)) {
-		generateResultNode("The problem is unbounded and no optimal solution exists.");
+		generateResultNodeAndScrollIntoView("The problem is unbounded and no optimal solution exists.");
 		return;
 	}
 	let iteration = iterationStart;
@@ -403,6 +430,8 @@ const clearResults = () => {
 	}
 	results.style.display = "none";
 	document.getElementById("legend").style.display = "none";
+	document.getElementById("input").style.border = "1px solid #000000";
+	document.querySelector(".invalid-text").textContent = "";
 };
 
 const cloneTableau = (tableau) => [...tableau].map(row => [...row]);
@@ -436,10 +465,21 @@ const generateResultNodeAndScrollIntoView = (text) => {
 	displayResults.scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
+const setInvalidInputState = (invalidText) => {
+	document.getElementById("input").style.border = "0.15rem solid #da1e28";
+	document.querySelector(".invalid-text").appendChild(document.createTextNode(invalidText));
+};
+
 const main = () => {
 	clearResults();
 	const tableauAnchor = document.getElementById("tableau-anchor");
 	const parsedResult = parse();
+	const { isInvalid } = parsedResult;
+
+	if (isInvalid) {
+		return;
+	}
+
 	let { distinctVariableNames } = parsedResult;
 	let initialVariableNames = [...distinctVariableNames];
 	const { comparisons } = parsedResult;
@@ -482,8 +522,8 @@ const main = () => {
 	phaseOneResultNode.appendChild(document.createTextNode(`
 		${
 			isFeasible
-				?`The problem is feasible. The initial vertex calculated is:
-				${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}`
+				? `The problem is feasible. The initial vertex calculated is:
+					${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}`
 				: "The problem is infeasible."
 		}
 	`));

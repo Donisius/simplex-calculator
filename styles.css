@@ -3,7 +3,7 @@ html, button, table {
 }
 
 textarea {
-	border: 1px solid #000000;
+	border: 0.15px solid #000000;
 	background-color: #f4f4f4;
 	font-family: 'Fira Code', monospace;
 	font-size: 1.2rem;
@@ -43,6 +43,13 @@ h2 {
 #input {
 	width: 70%;
 	margin-bottom: 1rem;
+}
+
+.invalid-text {
+	margin-top: -1rem;
+	margin-bottom: 1.5rem;
+	color: #da1e28;
+	font-weight: 1000;
 }
 
 .tableau-wrapper {
