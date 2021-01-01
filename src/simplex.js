@@ -1,3 +1,5 @@
+const EPSILON = 0.00000000001; // For floating point strict compares.
+
 const parse = () => {
 	const textContent = document.getElementById("input").value;
 
@@ -37,7 +39,7 @@ const parse = () => {
 	for (line of separatedEquations) {
 		// If line is just whitespace, ignore it.
 		if (!line.replace(/\s/g, "").length) {
-			break;
+			continue;
 		}
 
 		// This is a pretty straightforward parsing algorithm.
@@ -401,7 +403,7 @@ const generateTable = (body, headers, caption = "Tableau", pivotPosition = { x: 
 		tableRow = document.createElement("tr");
 		row.forEach((datapoint, columnIndex) => {
 			tableDatapoint = document.createElement("td");
-			tableDatapoint.appendChild(document.createTextNode(datapoint));
+			tableDatapoint.appendChild(document.createTextNode(formatNumber(datapoint)));
 			// Highlight pivot element.
 			if (rowIndex === pivotPosition.y && columnIndex === pivotPosition.x) {
 				tableDatapoint.style.backgroundColor = "#fa4d567F";
@@ -451,11 +453,11 @@ const getNumberOfStrictInequalities = (comparisons) => (
 // The problem is feasible if and only if all the coefficients in the auxiliary cost function is <= 0
 // AND the optimal solution to the auxiliary problem is 0.
 const isProblemFeasible = (tableau) => (
-	// TODO: Deal with floating point numbers better than just getting the floor when checking for equality.
-	// Issue: https://github.com/Donisius/simplex-calculator/issues/14
 	tableau[0]
 		.slice(1, -1)
-		.every(coefficient => coefficient <= 0) && Math.floor(tableau[0][tableau[0].length - 1]) === 0
+		// Precision is determined by `EPSILON`. If EPSILON - value is greater than zero, we round
+		// the value to ~0.
+		.every(coefficient => coefficient <= 0) && EPSILON - Math.abs(tableau[0][tableau[0].length - 1]) >= 0
 );
 
 // The problem is unbounded if at any point there is a cost function coefficient that is
@@ -496,6 +498,9 @@ const generatePhaseHeading = (headingText) => {
 	phaseTwoHeading.style.fontWeight = "bold";
 	tableauAnchor.appendChild(phaseTwoHeading);
 };
+
+// Only reformat the number if it has a decimal value.
+const formatNumber = (number) => Math.round(number) === number ? number : number.toFixed(2);
 
 const transitionToPhaseTwo = (tableau, distinctVariableNames, initialVariableNames, comparisons) => {
 	const modifiedTableau = cloneTableau(tableau);
@@ -559,7 +564,7 @@ const main = () => {
 		${
 			isFeasible
 				? `The problem is feasible. The initial vertex calculated is:
-					${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}`
+					${phaseOneResult.map((result => `${result.variable} = ${formatNumber(result.value)}`))}`
 				: "The problem is infeasible."
 		}
 	`);
@@ -579,7 +584,7 @@ const main = () => {
 	results = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
 	generateResultNodeAndScrollIntoView(`
 		The ${optimizationType === "max" ? "maximum" : "minimum"} value of
-		${tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1)}
-		can be achieved with: ${results.map(result => `${result.variable} = ${result.value}`)}
+		${formatNumber(tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1))}
+		can be achieved with: ${results.map(result => `${result.variable} = ${formatNumber(result.value)}`)}
 	`);
 };
