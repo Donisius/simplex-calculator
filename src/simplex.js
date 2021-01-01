@@ -1,5 +1,3 @@
-const EPSILON = 0.00000000001; // For floating point strict compares.
-
 const parse = () => {
 	const textContent = document.getElementById("input").value;
 
@@ -452,13 +450,14 @@ const getNumberOfStrictInequalities = (comparisons) => (
 // This should be used at the end of phase one.
 // The problem is feasible if and only if all the coefficients in the auxiliary cost function is <= 0
 // AND the optimal solution to the auxiliary problem is 0.
-const isProblemFeasible = (tableau) => (
-	tableau[0]
+const isProblemFeasible = (tableau) => {
+	const EPSILON = 0.00000000001; // For floating point strict compares.
+	return tableau[0]
 		.slice(1, -1)
 		// Precision is determined by `EPSILON`. If EPSILON - value is greater than zero, we round
 		// the value to ~0.
-		.every(coefficient => coefficient <= 0) && EPSILON - Math.abs(tableau[0][tableau[0].length - 1]) >= 0
-);
+		.every(coefficient => coefficient <= 0) && EPSILON - Math.abs(tableau[0][tableau[0].length - 1]) >= 0;
+};
 
 // The problem is unbounded if at any point there is a cost function coefficient that is
 // strictly positive and can not be pivoted out.
