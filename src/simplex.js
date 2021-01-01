@@ -1,4 +1,3 @@
-// TODO: catch invalid inputs.
 const parse = () => {
 	const textContent = document.getElementById("input").value;
 
@@ -41,7 +40,7 @@ const parse = () => {
 			break;
 		}
 
-		// This is a pretty straightforward parsing algorithm. TODO: Make this more robust.
+		// This is a pretty straightforward parsing algorithm.
 		// Each character in the line will be iterated over and we try and predict whether a particular
 		// character is a part of the following:
 		// `signum`: can be `+` or `-`
