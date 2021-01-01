@@ -2,7 +2,7 @@
 	"name": "simplex-calculator",
 	"version": "1.0.0",
 	"description": "A simple calculator for simple linear optimization problems",
-	"main": "simplex.js",
+	"main": "index.js",
 	"scripts": {
 		"lint": "eslint src/**",
 		"lint:fix": "eslint src/** --fix",
