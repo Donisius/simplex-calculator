@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-This projects uses `eslint` and `husky`. You can install them with
+This project requires no dependencies except for development and those can be acquired with:
 * npm
   ```sh
   npm i
