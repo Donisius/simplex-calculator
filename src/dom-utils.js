@@ -96,6 +96,8 @@ export const generatePhaseHeading = (headingText) => {
 	phaseHeading.appendChild(document.createTextNode(headingText));
 	phaseHeading.style.fontWeight = "bold";
 	phaseHeading.style.textDecoration = "underline";
+	phaseHeading.style.textAlign = "center";
+	phaseHeading.style.marginBottom = "3rem";
 	tableauAnchor.appendChild(phaseHeading);
 };
 
