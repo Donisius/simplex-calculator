@@ -208,18 +208,16 @@ const getPivotPosition = (tableau, phase) => {
  * 2. Get the pivot position using Dantzig's rule. Check out `getPivotPosition` for details.
  *
  * @param tableau
- * @param distinctVariableNames 
- * @param iterationStart This is for the generation of the tables captions.
+ * @param distinctVariableNames
  * @param phase Phase `1` or phase `2` of the simplex method.
  */
-const doSimplex = (tableau, distinctVariableNames, iterationStart, phase) => {
+const doSimplex = (tableau, distinctVariableNames, phase) => {
 	modifiedTableau = cloneTableau(tableau);
 	if (isProblemUnbounded(modifiedTableau)) {
 		generateResultNodeAndScrollIntoView("The problem is unbounded and no optimal solution exists.");
 		return;
 	}
-	let iteration = iterationStart;
-	// TODO: Add cycle detection.
+	let iteration = 0;
 	while (!modifiedTableau[0].slice(1, -1).every((datapoint => datapoint <= 0))) {
 		pivotPosition = getPivotPosition(modifiedTableau, phase);
 
@@ -241,9 +239,10 @@ const doSimplex = (tableau, distinctVariableNames, iterationStart, phase) => {
 		// You might be asking, "Why in the world would you call `getPivotPosition` again here?",
 		// and well that's because in order to properly indicate which row to pivot on next on the
 		// html table, we need to preemptively calculate it's pivot position. I need to know what the
-		// table needs to contain before I generate it so leave me alone. Can this be better, definitely.
-		generateTable(distinctVariableNames,
+		// table needs to contain before I generate it (with this current set up).
+		generateTable(
 			modifiedTableau,
+			distinctVariableNames,
 			`Tableau ${iteration}`,
 			getPivotPosition(modifiedTableau, phase),
 			phase
@@ -327,6 +326,15 @@ const generatePhaseOne = (tableau, distinctVariableNames, comparisons) => {
 	// Add original cost function as the last row of the tableau.
 	relaxedTableau.push(originalCostFunction);
 
+	// Use gaussian elimination to get all auxiliary variables in the cost function to zero
+	// by adding all the other rows to the cost function.
+	relaxedTableau[0] = relaxedTableau[0].map((datapoint, columnIndex) => (
+		// Ignore the cost variable and the RHS.
+		datapoint + relaxedTableau.slice(1, -1).reduce((currentTotal, row) =>
+			currentTotal + row[columnIndex], 0
+		)
+	));
+
 	return {
 		tableau: relaxedTableau,
 		distinctVariableNames: modifiedVariableNames
@@ -374,7 +382,7 @@ const calculateCoefficients = (tableau, initialVariableNames, currentVariableNam
  * @param phase Phase `1` or phase `2` of the simplex method. In phase 1 the function highlights the
  * row containing the original cost function.
  */
-const generateTable = (headers, body, caption = "Tableau", pivotPosition = { x: null, y: null }, phase) => {
+const generateTable = (body, headers, caption = "Tableau", pivotPosition = { x: null, y: null }, phase) => {
 	const anchor = document.getElementById("tableau-anchor");
 
 	const table = document.createElement("table");
@@ -465,14 +473,55 @@ const generateResultNodeAndScrollIntoView = (text) => {
 	displayResults.scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
+const displayPhaseOneResult = (text) => {
+	const tableauAnchor = document.getElementById("tableau-anchor");
+	const phaseOneResultNode = document.createElement("h2");
+	phaseOneResultNode.appendChild(document.createTextNode(text));
+	phaseOneResultNode.style.textAlign = "center";
+	tableauAnchor.appendChild(phaseOneResultNode);
+};
+
 const setInvalidInputState = (invalidText) => {
 	document.getElementById("input").style.border = "0.15rem solid #da1e28";
 	document.querySelector(".invalid-text").appendChild(document.createTextNode(invalidText));
 };
 
+const generatePhaseHeading = (headingText) => {
+	const tableauAnchor = document.getElementById("tableau-anchor");
+	const phaseTwoHeading = document.createElement("h2");
+	phaseTwoHeading.appendChild(document.createTextNode(headingText));
+	phaseTwoHeading.style.fontWeight = "bold";
+	tableauAnchor.appendChild(phaseTwoHeading);
+};
+
+const transitionToPhaseTwo = (tableau, distinctVariableNames, initialVariableNames, comparisons) => {
+	const modifiedTableau = cloneTableau(tableau);
+	const modifiedVariableNames = [...distinctVariableNames];
+
+	// Number of original cost function coefficients + number of introduced slack variables + cost variable (z).
+	const spliceStartIndex = initialVariableNames.length + getNumberOfStrictInequalities(comparisons) + 1;
+
+	const numberOfElementsToRemove = modifiedTableau.length - 2; // Number of introduced auxiliary variables.
+
+	// Remove imaginary coefficients.
+	modifiedTableau.forEach((row) => {
+		row.splice(spliceStartIndex, numberOfElementsToRemove);
+	});
+	// Remove imaginary variables.
+	modifiedVariableNames.splice(spliceStartIndex, numberOfElementsToRemove);
+
+	// Make the original cost function as the first row and remove the
+	// original cost function from the last row.
+	modifiedTableau[0] = modifiedTableau.pop();
+
+	return {
+		tableau: modifiedTableau,
+		distinctVariableNames: modifiedVariableNames
+	};
+};
+
 const main = () => {
 	clearResults();
-	const tableauAnchor = document.getElementById("tableau-anchor");
 	const parsedResult = parse();
 	const { isInvalid } = parsedResult;
 
@@ -487,6 +536,8 @@ const main = () => {
 	const initialTableau = cloneTableau(tableau);
 	const { optimizationType } = parsedResult;
 
+	// To find a minimum value, turn the problem into a maximization problem by finding the
+	// maximum value of the negative version of the original cost function.
 	if (optimizationType === "min") {
 		tableau[0] = tableau[0].map(coefficient => coefficient * -1);
 		initialTableau[0] = initialTableau[0].map(coefficient => coefficient * -1);
@@ -496,81 +547,34 @@ const main = () => {
 	const auxiliaryProblem = generatePhaseOne(tableau, distinctVariableNames, comparisons);
 	tableau = auxiliaryProblem.tableau;
 	distinctVariableNames = auxiliaryProblem.distinctVariableNames;
-
-	const phaseOneHeading = document.createElement("h2");
-	phaseOneHeading.appendChild(document.createTextNode("Phase One"));
-	phaseOneHeading.style.fontWeight = "bold";
-	tableauAnchor.appendChild(phaseOneHeading);
-
-	generateTable(distinctVariableNames, tableau, "Initial Tableau", undefined, 1);
-	// Use gaussian elimination to get all auxiliary variables in the cost function to zero
-	// by adding all the other rows to the cost function.
-	tableau[0] = tableau[0].map((datapoint, columnIndex) => (
-		// Ignore the cost variable and the RHS.
-		datapoint + tableau.slice(1, -1).reduce((currentTotal, row) =>
-			currentTotal + row[columnIndex], 0
-		)
-	));
-	generateTable(distinctVariableNames, tableau, "Tableau 0", getPivotPosition(tableau, 1), 1);
-	tableau = doSimplex(tableau, distinctVariableNames, 1, 1);
-
+	generatePhaseHeading("Phase one");
+	generateTable(tableau, distinctVariableNames, "Initial Tableau", getPivotPosition(tableau, 1), 1);
+	tableau = doSimplex(tableau, distinctVariableNames, 1);
 	const isFeasible = isProblemFeasible(tableau);
-
 	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
-	const phaseOneResultNode = document.createElement("h2");
 	/* eslint-disable indent */
-	phaseOneResultNode.appendChild(document.createTextNode(`
+	displayPhaseOneResult(`
 		${
 			isFeasible
 				? `The problem is feasible. The initial vertex calculated is:
 					${phaseOneResult.map((result => `${result.variable} = ${result.value}`))}`
 				: "The problem is infeasible."
 		}
-	`));
+	`);
 	/* eslint-enable indent */
-	phaseOneResultNode.style.textAlign = "center";
-	tableauAnchor.appendChild(phaseOneResultNode);
-
 	if (!isFeasible) {
 		generateResultNodeAndScrollIntoView("The problem is infeasible.");
 		return;
 	}
 
 	// PHASE 2
-	// Remove imaginary coefficients.
-	tableau.forEach((row) => {
-		row.splice(
-			// Number of original cost function coefficients + number of introduced slack variables + cost variable (z).
-			initialVariableNames.length + getNumberOfStrictInequalities(comparisons) + 1,
-			tableau.length - 2 // Number of introduced auxiliary variables.
-		);
-	});
-	// Remove imaginary variables.
-	distinctVariableNames.splice(
-		// Number of original cost function coefficients + number of introduced slack variables + cost variable (z).
-		initialVariableNames.length + getNumberOfStrictInequalities(comparisons) + 1,
-		tableau.length - 2 // Number of introduced auxiliary variables.
-	);
-
-	// Make the original cost function as the first row and remove the
-	// original cost function from the last row.
-	tableau[0] = tableau.pop();
-
-	const phaseTwoHeading = document.createElement("h2");
-	phaseTwoHeading.appendChild(document.createTextNode("Phase Two"));
-	phaseTwoHeading.style.fontWeight = "bold";
-	tableauAnchor.appendChild(phaseTwoHeading);
-
-	generateTable(
-		distinctVariableNames,
-		tableau,
-		"Initial Tableau",
-		getPivotPosition(tableau, 2),
-		2
-	);
-	tableau = doSimplex(tableau, distinctVariableNames, 0, 2);
+	const phaseTwo = transitionToPhaseTwo(tableau, distinctVariableNames, initialVariableNames, comparisons);
+	tableau = phaseTwo.tableau;
+	distinctVariableNames = phaseTwo.distinctVariableNames;
+	generatePhaseHeading("Phase two");
+	generateTable(tableau, distinctVariableNames, "Initial Tableau", getPivotPosition(tableau, 2), 2);
+	tableau = doSimplex(tableau, distinctVariableNames, 2);
 	results = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
-
 	generateResultNodeAndScrollIntoView(`
 		The ${optimizationType === "max" ? "maximum" : "minimum"} value of
 		${tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1)}
