@@ -251,7 +251,7 @@ th {
 }
 
 @media only screen and (max-width: 820px) {
-	h4 textarea button th td .checkbox-wrapper {
+	h4, textarea, button, th, td, .checkbox-wrapper {
 		font-size: small;
 	}
 
@@ -269,7 +269,7 @@ th {
 }
 
 @media only screen and (max-width: 575px) {
-	table #tableau-anchor .title-wrapper .instructions .sample-LOs {
+	table, #tableau-anchor, .title-wrapper, .instructions, .sample-LOs {
 		width: 100%;
 	}
 	th {
