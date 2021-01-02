@@ -192,11 +192,11 @@ export const transitionToPhaseTwo = (tableau, distinctVariableNames, initialVari
 
 	const numberOfElementsToRemove = modifiedTableau.length - 2; // Number of introduced auxiliary variables.
 
-	// Remove imaginary coefficients.
+	// Remove auxiliary coefficients.
 	modifiedTableau.forEach((row) => {
 		row.splice(spliceStartIndex, numberOfElementsToRemove);
 	});
-	// Remove imaginary variables.
+	// Remove auxiliary variables.
 	modifiedVariableNames.splice(spliceStartIndex, numberOfElementsToRemove);
 
 	// Make the original cost function as the first row and remove the
