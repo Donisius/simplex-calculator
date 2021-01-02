@@ -3,7 +3,7 @@ html, button, table {
 }
 
 textarea {
-	border: 0.15px solid #000000;
+	border: 0.15px solid #393939;
 	background-color: #f4f4f4;
 	font-family: 'Fira Code', monospace;
 	font-size: 1.2rem;
@@ -52,7 +52,7 @@ h2 {
 }
 
 .checkbox-wrapper input ~ .checkmark {
-	border: 0.1rem solid #000000;
+	border: 0.1rem solid #393939;
 }
 
 .checkbox-wrapper:hover input ~ .checkmark {

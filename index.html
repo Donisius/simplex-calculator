@@ -25,11 +25,10 @@
 		</h4>
 		<div class="sample-LOs">
 			<h4 class="LO">
-				max 40x1 + 30x2
-				x1 + x2 <= 12
-				2x1 + x2 <= 16
-				x1 >= 0
-				x2 >= 0
+				max 3x1 + x2 + 3x3
+				2x1 + 3x2 + 5x3 <= 64
+				x1 - x2 - x3 >= 0
+				x2 - x3 >= 2
 			</h4>
 			<h4>
 				or
@@ -38,15 +37,35 @@
 				min 12x1 + 16x2
 				x1 + 2x2 >= 40
 				x1 + x2 = 30
-				x1 >= 0
-				x2 >= 0
+				* >= 0
 			</h4>
 		</div>
+		<h4 class="instructions">
+			You can also use the * operator to have a constraint apply to all variables.
+			For example:
+		</h4>
+		<h4 class="LO" style="margin-top: -2.2rem;">
+			min 5x1 - 20x2
+			-2x1 + 10x2 <= 5
+			2x1 + 5x2 <= 10
+			* + x1 >= 0
+		</h4>
+		<h4 class="instructions">
+			will be interpreted as:
+		</h4>
+		<h4 class="LO" style="margin-top: -2.2rem;">
+			min 5x1 - 20x2
+			-2x1 + 10x2 <= 5
+			2x1 + 5x2 <= 10
+			x1 + x1 >= 0
+			x2 + x1 >= 0
+		</h4>
 		<textarea id="input" rows="10", cols="100">
-max 2x1 + 3x2 + 6x3
-x1 + 2x2 + 2x3 <= 20
-x1 + 2x2 - 2x3 >= 4
-x2 - x3 >= 0
+max 3x1 + 2x2
+2x1 + x2 <= 18
+2x1 + 3x2 <= 42
+3x1 + x2 <= 24
+* >= 0
 		</textarea>
 		<div class="invalid-text"></div>
 		<label class="checkbox-wrapper">

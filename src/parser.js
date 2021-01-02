@@ -1,7 +1,7 @@
 import { setInvalidInputState } from "./dom-utils.js";
 
 const noOptimizationTypeText = "Indicate a cost function by putting 'max' or 'min' on the same line as the cost equation. Please refer to the examples above.";
-const noLeftVariablesText = "Variables must be on the left hand side of each constraint. Please refer to the examples above.";
+const noRightSideVariablesText = "Variables must be on the left hand side of each constraint. Please refer to the examples above.";
 const strictComparatorsOnlyText = "Comparators must all be one of the following: >=, =, or <=. Please refer to the example above.";
 const noSpecialVariablesText = (variableName = "Variable name") => `${variableName} is a reserved variable. Variable names cannot be 's' followed by a number or 'a' followed by a number`;
 
@@ -31,6 +31,23 @@ export const parse = () => {
 	// This is used to keep track of the variable names of a particular row. After the row's variable names
 	// have been added to `variableNames`, this will be reset, and populated in the next iteration.
 	let rowVariableNames = [];
+	// If a line contains one or more `*`, it means all known variables will have this constraint.
+	// For example:
+	//
+	// max x1 + x2 + x3
+	// x1 + x2 <= 6
+	// x2 + x3 <= 6
+	// * >= 0
+	//
+	// this will result in the following linear optimization problem:
+	//
+	// max x1 + x2 + x3
+	// x1 + x2 <= 6
+	// x2 + x3 <= 6
+	// x1 >= 0
+	// x2 >= 0
+	// x3 >=0
+	let rowStarCoefficients = [];
 
 	const separatedEquations = textContent.split(/\n/);
 
@@ -84,9 +101,13 @@ export const parse = () => {
 				coefficient = coefficient.concat(char);
 			}
 			
-			else if (char !== "+" && char !== " " && char !== "-") {
+			else if (char !== "+"
+				&& char !== " "
+				&& char !== "-"
+				&& char !== "\t"
+				&& char !== "*") {
 				if (comparison.length) {
-					setInvalidInputState(noLeftVariablesText);
+					setInvalidInputState(noRightSideVariablesText);
 					return { isInvalid: true };
 				}
 				variableName = variableName.concat(char);
@@ -95,16 +116,29 @@ export const parse = () => {
 			else if (char === "-") {
 				signum = "negative";
 			}
+			
+			else if (char === "*") {
+				if (!coefficient.length) {
+					coefficient = "1";
+				}
+				if (signum === "negative") {
+					coefficient = "-" + coefficient;
+				}
+				rowStarCoefficients.push(parseFloat(coefficient));
+				coefficient = "";
+				signum = "positive";
+			}
 
 			// `variableName` and `coefficient` are done being built and can be pushed to their
 			// corresponding arrays.
 			if (((char === " "
+				|| char === "\t"
 				|| char === "+"
 				|| char === "-"
 				|| char === "<"
 				|| char === "="
-				|| char === ">")
-				&& variableName.length !== 0) || columnIndex === line.length - 1) {
+				|| char === ">"
+			) && variableName.length !== 0) || columnIndex === line.length - 1) {
 				// Cases like `x1 + x2`.
 				if (coefficient.length === 0) {
 					coefficient = "1";
@@ -115,7 +149,7 @@ export const parse = () => {
 				}
 
 				rowCoefficients.push(parseFloat(coefficient));
-				if (variableName.length) {
+				if (variableName.length) { // In case columnIndex === line.length - 1.
 					if (specialVariableRegex.test(variableName)) {
 						setInvalidInputState(noSpecialVariablesText(variableName));
 						return { isInvalid: true };
@@ -139,9 +173,24 @@ export const parse = () => {
 				setInvalidInputState(strictComparatorsOnlyText);
 				return { isInvalid: true };
 			}
-			comparisons.push(comparison);
-			coefficients.push(rowCoefficients);
-			variableNames.push(rowVariableNames);
+
+			if (rowStarCoefficients.length) {
+				distinctVariableNames.forEach(variableName => {
+					let modifiedVariableNames;
+					let modifiedCoefficients;
+					rowStarCoefficients.forEach(starCoefficient => {
+						modifiedVariableNames = [variableName, ...rowVariableNames];
+						modifiedCoefficients = [starCoefficient, ...rowCoefficients];
+					});
+					comparisons.push(comparison);
+					coefficients.push(modifiedCoefficients);
+					variableNames.push(modifiedVariableNames);
+				});
+			} else {
+				comparisons.push(comparison);
+				coefficients.push(rowCoefficients);
+				variableNames.push(rowVariableNames);
+			}
 		} else { // Cost function will be at the top.
 			coefficients.unshift(rowCoefficients);
 			variableNames.unshift(rowVariableNames);
@@ -150,6 +199,7 @@ export const parse = () => {
 		// Reset row trackers.
 		rowCoefficients = [];
 		rowVariableNames = [];
+		rowStarCoefficients = [];
 	}
 
 	const tableau = [];
