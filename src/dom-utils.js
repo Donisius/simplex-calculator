@@ -72,7 +72,9 @@ export const generateResultNodeAndScrollIntoView = (text) => {
 	const displayResults = document.getElementById("results");
 	displayResults.appendChild(document.createTextNode(text));
 	displayResults.style.display = "block";
-	document.getElementById("legend").style.display = "block";
+	if (shouldDisplayTables()) {
+		document.getElementById("legend").style.display = "block";
+	}
 	displayResults.scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
@@ -103,3 +105,5 @@ export const generatePhaseHeading = (headingText) => {
 
 // Only reformat the number if it has a decimal value.
 export const formatNumber = (number) => Math.round(number) === number ? number : number.toFixed(2);
+
+export const shouldDisplayTables = () => document.getElementById("show-tables-checkbox").checked;

@@ -4,7 +4,11 @@ import {
 	getNumberOfStrictInequalities
 } from "./utils.js";
 
-import { generateTable, generateResultNodeAndScrollIntoView } from "./dom-utils.js";
+import {
+	generateTable,
+	generateResultNodeAndScrollIntoView,
+	shouldDisplayTables
+} from "./dom-utils.js";
 
 /**
  * We use Dantzig's here to calculate which element to use as the pivot. It goes as follows:
@@ -72,18 +76,20 @@ export const doSimplex = (tableau, distinctVariableNames, phase) => {
 				);
 			}
 		});
-		// You might be asking, "Why in the world would you call `getPivotPosition` again here?",
-		// and well that's because in order to properly indicate which row to pivot on next on the
-		// html table, we need to preemptively calculate it's pivot position. I need to know what the
-		// table needs to contain before I generate it (with this current set up).
-		generateTable(
-			modifiedTableau,
-			distinctVariableNames,
-			`Tableau ${iteration}`,
-			getPivotPosition(modifiedTableau, phase),
-			phase
-		);
-		iteration++;
+		if (shouldDisplayTables()) {
+			// You might be asking, "Why in the world would you call `getPivotPosition` again here?",
+			// and well that's because in order to properly indicate which row to pivot on next on the
+			// html table, we need to preemptively calculate it's pivot position. I need to know what the
+			// table needs to contain before I generate it (with this current set up).
+			generateTable(
+				modifiedTableau,
+				distinctVariableNames,
+				`Tableau ${iteration}`,
+				getPivotPosition(modifiedTableau, phase),
+				phase
+			);
+			iteration++;
+		}
 	}
 	return modifiedTableau;
 };

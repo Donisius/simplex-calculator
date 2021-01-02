@@ -16,16 +16,18 @@ import {
 	generateResultNodeAndScrollIntoView,
 	displayPhaseResult,
 	generatePhaseHeading,
-	formatNumber
+	formatNumber,
+	shouldDisplayTables
 } from "./dom-utils.js";
 
 const runSimplex = () => {
 	clearResults();
 	const parsedResult = parse();
-
 	if (parsedResult.isInvalid) {
 		return;
 	}
+
+	const displayTables = shouldDisplayTables();
 
 	let { distinctVariableNames } = parsedResult;
 	let initialVariableNames = [...distinctVariableNames];
@@ -45,20 +47,24 @@ const runSimplex = () => {
 	const auxiliaryProblem = generatePhaseOne(tableau, distinctVariableNames, comparisons);
 	tableau = auxiliaryProblem.tableau;
 	distinctVariableNames = auxiliaryProblem.distinctVariableNames;
-	generatePhaseHeading("Phase one");
-	generateTable(tableau, distinctVariableNames, "Initial Tableau", getPivotPosition(tableau, 1), 1);
+	if (displayTables) {
+		generatePhaseHeading("Phase one");
+		generateTable(tableau, distinctVariableNames, "Initial Tableau", getPivotPosition(tableau, 1), 1);
+	}
 	tableau = doSimplex(tableau, distinctVariableNames, 1);
 	const isFeasible = isProblemFeasible(tableau);
-	const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
-	/* eslint-disable indent */
-	displayPhaseResult(`
-		${
-			isFeasible
-				? `The problem is feasible. The initial vertex calculated is:
-					${phaseOneResult.map((result => `${result.variable} = ${formatNumber(result.value)}`))}`
-				: "The problem is infeasible."
-		}
-	`);
+	if (displayTables) {
+		const phaseOneResult = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
+		/* eslint-disable indent */
+		displayPhaseResult(`
+			${
+				isFeasible
+					? `The problem is feasible. The initial vertex calculated is:
+						${phaseOneResult.map((result => `${result.variable} = ${formatNumber(result.value)}`))}`
+					: "The problem is infeasible."
+			}
+		`);
+	}
 	/* eslint-enable indent */
 	if (!isFeasible) {
 		generateResultNodeAndScrollIntoView("The problem is infeasible.");
@@ -69,8 +75,10 @@ const runSimplex = () => {
 	const phaseTwo = transitionToPhaseTwo(tableau, distinctVariableNames, initialVariableNames, comparisons);
 	tableau = phaseTwo.tableau;
 	distinctVariableNames = phaseTwo.distinctVariableNames;
-	generatePhaseHeading("Phase two");
-	generateTable(tableau, distinctVariableNames, "Initial Tableau", getPivotPosition(tableau, 2), 2);
+	if (displayTables) {
+		generatePhaseHeading("Phase two");
+		generateTable(tableau, distinctVariableNames, "Initial Tableau", getPivotPosition(tableau, 2), 2);
+	}
 	tableau = doSimplex(tableau, distinctVariableNames, 2);
 	if (tableau) {
 		const results = calculateCoefficients(tableau, initialVariableNames, distinctVariableNames);
@@ -79,13 +87,14 @@ const runSimplex = () => {
 			${formatNumber(tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1))}
 			can be achieved with: ${results.map(result => `${result.variable} = ${formatNumber(result.value)}`)}
 		`);
-
-		displayPhaseResult(`
-			The ${optimizationType === "max" ? "maximum" : "minimum"} value of
-			${formatNumber(tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1))}
-			can be achieved with: ${results.map(result => `${result.variable} = ${formatNumber(result.value)}`)}
-		`);
-	} else {
+		if (displayTables) {
+			displayPhaseResult(`
+				The ${optimizationType === "max" ? "maximum" : "minimum"} value of
+				${formatNumber(tableau[0][distinctVariableNames.length - 1] * -1 * (optimizationType === "min" ? -1 : 1))}
+				can be achieved with: ${results.map(result => `${result.variable} = ${formatNumber(result.value)}`)}
+			`);
+		}
+	} else if (displayTables) {
 		displayPhaseResult("A positive cost function coefficient is unable to be cancelled out. The problem is unbounded.");
 	}
 };

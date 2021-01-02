@@ -29,6 +29,71 @@ h2 {
 	align-items: center;
 }
 
+.checkbox-wrapper {
+	display: block;
+	position: relative;
+	padding-left: 2.1rem;
+	margin-bottom: 2rem;
+	cursor: pointer;
+	font-size: medium;
+	font-weight: bold;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.checkbox-wrapper #show-tables-checkbox {
+	position: absolute;
+	opacity: 0;
+	cursor: pointer;
+	height: 0;
+	width: 0;
+}
+
+.checkbox-wrapper input ~ .checkmark {
+	border: 0.1rem solid #000000;
+}
+
+.checkbox-wrapper:hover input ~ .checkmark {
+	background-color: #e0e0e0;
+}
+
+.checkbox-wrapper input:checked ~ .checkmark {
+	background-color: #393939;
+}
+
+.checkmark {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 1.3rem;
+	width: 1.3rem;
+	background-color: #f4f4f4;
+}
+
+.checkmark:after {
+	content: "";
+	position: absolute;
+	display: none;
+}
+
+.checkbox-wrapper input:checked ~ .checkmark:after {
+	display: block;
+}
+
+.checkbox-wrapper .checkmark:after {
+	left: 6.8px;
+	top: 2px;
+	width: 5px;
+	height: 10px;
+	border: solid white;
+	border-width: 0 3px 3px 0;
+	-webkit-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+
 .title-wrapper {
 	width: 70%;
 	text-align: center !important;
@@ -186,7 +251,7 @@ th {
 }
 
 @media only screen and (max-width: 820px) {
-	h4, textarea, button, th, td {
+	h4 textarea button th td .checkbox-wrapper {
 		font-size: small;
 	}
 
@@ -204,7 +269,7 @@ th {
 }
 
 @media only screen and (max-width: 575px) {
-	table, #tableau-anchor, .title-wrapper, .instructions, .sample-LOs {
+	table #tableau-anchor .title-wrapper .instructions .sample-LOs {
 		width: 100%;
 	}
 	th {
