@@ -118,6 +118,10 @@ export const parse = () => {
 			}
 			
 			else if (char === "*") {
+				if (comparison.length) {
+					setInvalidInputState(noRightSideVariablesText);
+					return { isInvalid: true };
+				}
 				if (!coefficient.length) {
 					coefficient = "1";
 				}
