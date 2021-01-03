@@ -44,22 +44,24 @@
 			You can also use the * operator to have a constraint apply to all variables.
 			For example:
 		</h4>
-		<h4 class="LO" style="margin-top: -2.2rem;">
-			min 5x1 - 20x2
-			-2x1 + 10x2 <= 5
-			2x1 + 5x2 <= 10
-			x1 + * >= 0
-		</h4>
-		<h4 class="instructions">
-			will be interpreted as:
-		</h4>
-		<h4 class="LO" style="margin-top: -2.2rem;">
-			min 5x1 - 20x2
-			-2x1 + 10x2 <= 5
-			2x1 + 5x2 <= 10
-			x1 + x1 >= 0
-			x1 + x2 >= 0
-		</h4>
+		<div class="sample-LOs">
+			<h4 class="LO">
+				min 5x1 - 20x2
+				-2x1 + 10x2 <= 5
+				2x1 + 5x2 <= 10
+				x1 + * >= 0
+			</h4>
+			<h4>
+				will become
+			</h4>
+			<h4 class="LO">
+				min 5x1 - 20x2
+				-2x1 + 10x2 <= 5
+				2x1 + 5x2 <= 10
+				x1 + x1 >= 0
+				x1 + x2 >= 0
+			</h4>
+		</div>
 		<textarea id="input" rows="10", cols="100">
 max 3x1 + 2x2
 2x1 + x2 <= 18
