@@ -183,8 +183,16 @@ export const parse = () => {
 					let modifiedVariableNames;
 					let modifiedCoefficients;
 					rowStarCoefficients.forEach(starCoefficient => {
-						modifiedVariableNames = [variableName, ...rowVariableNames];
-						modifiedCoefficients = [starCoefficient, ...rowCoefficients];
+						const variableNamePosition = rowVariableNames.indexOf(variableName);
+						if (variableNamePosition !== -1) {
+							modifiedVariableNames = [...rowVariableNames];
+							modifiedCoefficients = [...rowCoefficients];
+							modifiedCoefficients[variableNamePosition]
+								= modifiedCoefficients[variableNamePosition] + starCoefficient;
+						} else {
+							modifiedVariableNames = [variableName, ...rowVariableNames];
+							modifiedCoefficients = [starCoefficient, ...rowCoefficients];
+						}
 					});
 					comparisons.push(comparison);
 					coefficients.push(modifiedCoefficients);
