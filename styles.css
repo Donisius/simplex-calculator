@@ -94,6 +94,10 @@ h2 {
 	transform: rotate(45deg);
 }
 
+.checkmark {
+	transform: scale(0.8);
+}
+
 .title-wrapper {
 	width: 70%;
 	text-align: center !important;
@@ -272,12 +276,15 @@ th {
 	table, #tableau-anchor, .title-wrapper, .instructions, .sample-LOs {
 		width: 100%;
 	}
+
 	th {
 		font-size: x-small;
 	}
+
 	td {
 		font-size: x-small;
 	}
+
 	.tableau-wrapper {
 		display: inline-block;
 	}

@@ -46,7 +46,7 @@ export const parse = () => {
 	// x2 + x3 <= 6
 	// x1 >= 0
 	// x2 >= 0
-	// x3 >=0
+	// x3 >= 0
 	let rowStarCoefficients = [];
 
 	const separatedEquations = textContent.split(/\n/);

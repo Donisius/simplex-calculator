@@ -57,7 +57,7 @@ export const doSimplex = (tableau, distinctVariableNames, phase) => {
 		generateResultNodeAndScrollIntoView("The problem is unbounded and no optimal solution exists.");
 		return;
 	}
-	let iteration = 0;
+	let iteration = 1;
 	while (!modifiedTableau[0].slice(1, -1).every((datapoint => datapoint <= 0))) {
 		const pivotPosition = getPivotPosition(modifiedTableau, phase);
 
